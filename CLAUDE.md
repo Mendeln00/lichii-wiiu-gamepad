@@ -12,6 +12,17 @@ Lichii (Switch‑Emulator) auf dem Wii U GamePad spielen, isoliert vom restliche
 - Keine Spiele, Keys, Firmware oder persönlichen Pfade ins Repo. Beispiele nutzen Platzhalter.
 - Apollo und Lichii werden nur konfiguriert, nicht gepatcht (ADR 0002). Patches gehen als PR upstream.
 
+## Sitzungen
+
+Neue Sitzungen starten oft, meist erst wenn die vorige fertig ist. Jede Sitzung übergibt deshalb einen **sauberen Stand**.
+
+- **Start**: Der SessionStart‑Hook (`.claude/hooks/session-start.sh`) holt den Stand von GitHub, spult `main` vor und listet offene PRs und freie Tickets. Von diesem Stand aus arbeiten.
+- **Ende**: Die Sitzung ist fertig, wenn alle vier Punkte stimmen:
+  1. Die Arbeit ist gemergt oder liegt als PR mit vollständiger Beschreibung offen.
+  2. Jedes berührte Issue trägt den Stand als Kommentar: erledigt, offen, nächster Schritt.
+  3. Der Checkout steht auf aktuellem `main`, ohne nicht committete Änderungen.
+  4. Was die nächste Sitzung wissen muss, steht im Repo (Issue, ADR, Doku).
+
 ## Agent skills
 
 Arbeitsablauf (welcher Skill bei welchem Schritt, von Triage bis PR): Tabelle „Mit Agent‑Skills arbeiten“ in `CONTRIBUTING.md`.
