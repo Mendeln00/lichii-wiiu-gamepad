@@ -39,9 +39,19 @@ Describe 'Merge-ApolloConfig' {
         $result | Should -BeExactly "Mouse = enabled`nmouse = disabled`n"
     }
 
-    It 'keeps an inline comment after the value' {
+    It 'moves an inline comment to its own line, because Apollo would keep the blank before it in the value' {
         $result = Merge-ApolloConfig -Text "mouse = enabled # set by hand`n" -Setting @{ mouse = 'disabled' }
-        $result | Should -BeExactly "mouse = disabled # set by hand`n"
+        $result | Should -BeExactly "# set by hand`nmouse = disabled`n"
+    }
+
+    It 'keeps CRLF when it moves an inline comment' {
+        $result = Merge-ApolloConfig -Text "mouse = enabled # set by hand`r`n" -Setting @{ mouse = 'disabled' }
+        $result | Should -BeExactly "# set by hand`r`nmouse = disabled`r`n"
+    }
+
+    It 'updates every line of a repeated key' {
+        $result = Merge-ApolloConfig -Text "mouse = enabled`nmouse = enabled`n" -Setting @{ mouse = 'disabled' }
+        $result | Should -BeExactly "mouse = disabled`nmouse = disabled`n"
     }
 
     It 'does not add a newline to a file without one when nothing is appended' {

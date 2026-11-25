@@ -27,6 +27,26 @@ Describe 'ConvertFrom-ApolloConfig' {
     It 'returns an empty table for empty input' {
         (ConvertFrom-ApolloConfig -Text '').Count | Should -Be 0
     }
+
+    It 'compares keys case-sensitively, like Apollo' {
+        $config = ConvertFrom-ApolloConfig -Text "Mouse = disabled`n"
+        $config.ContainsKey('mouse') | Should -BeFalse
+        $config['Mouse'] | Should -Be 'disabled'
+    }
+
+    It 'keeps the first of two equal keys, like Apollo' {
+        $config = ConvertFrom-ApolloConfig -Text "mouse = enabled`nmouse = disabled`n"
+        $config['mouse'] | Should -Be 'enabled'
+    }
+
+    It 'cuts the value at an inline comment and keeps the blank before it, like Apollo' {
+        $config = ConvertFrom-ApolloConfig -Text "mouse = enabled # set by hand`n"
+        $config['mouse'] | Should -BeExactly 'enabled '
+    }
+
+    It 'ignores a line whose = only appears inside the comment' {
+        (ConvertFrom-ApolloConfig -Text "locale # = de`n").Count | Should -Be 0
+    }
 }
 
 Describe 'ConvertFrom-LichiiConfig' {
