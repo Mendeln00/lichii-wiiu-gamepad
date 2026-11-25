@@ -1,0 +1,21 @@
+{
+  "env": {},
+  "apps": [
+    {
+      "name": "Desktop",
+      "image-path": "desktop.png"
+    },
+    {
+      "name": "Beispielspiel",
+      "cmd": "\"C:\\Emulators\\Lichii\\lichii.exe\" -f -g \"C:\\Games\\example.xci\"",
+      "working-dir": "\"C:\\Emulators\\Lichii\"",
+      "virtual-display": true,
+      "gamepad": "x360"
+    },
+    {
+      "name": "Ohne virtuelles Display",
+      "cmd": "C:\\Emulators\\Lichii\\lichii.exe -g C:\\Games\\other.nsp",
+      "virtual-display": false
+    }
+  ]
+}

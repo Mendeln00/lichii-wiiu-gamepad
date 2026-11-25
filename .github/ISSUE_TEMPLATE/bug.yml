@@ -1,0 +1,23 @@
+name: Fehler
+description: Etwas funktioniert nicht wie erwartet
+labels: [bug, needs-triage]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Was ist passiert, was hast du erwartet?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte zum Nachstellen
+  - type: textarea
+    id: check
+    attributes:
+      label: Ausgabe von `Test-LichiiGamepadHost -Detailed`
+      render: text
+  - type: input
+    id: versions
+    attributes:
+      label: Versionen (Lichii-Build, Apollo, Client, Aroma)

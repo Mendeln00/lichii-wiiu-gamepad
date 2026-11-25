@@ -1,0 +1,28 @@
+# Test output
+host/tests/testResults.xml
+coverage.xml
+
+# Wii U build artefacts
+*.rpx
+*.wuhb
+*.elf
+build/
+
+# Local, never commit: keys, firmware, games, personal configs
+*.keys
+*.xci
+*.nsp
+*.nca
+*.wud
+*.wux
+local/
+.scratch/
+*.bak
+
+# Editors / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+Thumbs.db
+.DS_Store
+.claude/settings.local.json
