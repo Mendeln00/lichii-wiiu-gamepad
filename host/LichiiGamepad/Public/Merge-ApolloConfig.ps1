@@ -18,33 +18,36 @@
     $lines = [System.Collections.Generic.List[string]]::new()
     foreach ($line in ($Text -split "`n")) { $lines.Add($line) }
 
-    $cr = ''
-    if ($Text.Contains("`r`n")) { $cr = "`r" }
+    # Changed lines keep their own ending; appended lines follow the file's style.
+    $appendedLineEnding = ''
+    if ($Text.Contains("`r`n")) { $appendedLineEnding = "`r" }
+    $keys = @($Setting.Keys)
     $found = @{}
 
     for ($i = 0; $i -lt $lines.Count; $i++) {
-        $line = $lines[$i]
+        $line = $lines[$i].TrimEnd([char]13)
+        $lineEnding = $lines[$i].Substring($line.Length)
         if ($line.TrimStart().StartsWith('#')) { continue }
         $separator = $line.IndexOf('=')
         if ($separator -lt 1) { continue }
         $key = $line.Substring(0, $separator).Trim()
-        if ($Setting.ContainsKey($key)) {
-            $ending = ''
-            if ($line.EndsWith("`r")) { $ending = "`r" }
-            $lines[$i] = "$key = $($Setting[$key])$ending"
+        # Apollo reads keys case-sensitively, the hashtable would not.
+        if ($keys -ccontains $key) {
+            # Apollo treats everything from '#' on as a comment, so keep it.
+            $comment = ''
+            $hash = $line.IndexOf('#', $separator)
+            if ($hash -ge 0) { $comment = ' ' + $line.Substring($hash) }
+            $lines[$i] = "$key = $($Setting[$key])$comment$lineEnding"
             $found[$key] = $true
         }
     }
 
-    # The text normally ends with a newline, so the last element is empty: insert before it.
-    $missing = @($Setting.Keys | Where-Object { -not $found.ContainsKey($_) } | Sort-Object)
+    $missing = @($keys | Where-Object { -not $found.ContainsKey($_) } | Sort-Object)
     if ($missing.Count -gt 0) {
-        $hadTrailingNewline = $lines[$lines.Count - 1] -eq ''
-        if ($hadTrailingNewline) { $lines.RemoveAt($lines.Count - 1) }
-        elseif ($lines.Count -gt 0 -and $lines[$lines.Count - 1] -ne '') {
-            $lines[$lines.Count - 1] = $lines[$lines.Count - 1] + $cr
-        }
-        foreach ($key in $missing) { $lines.Add("$key = $($Setting[$key])$cr") }
+        # A trailing newline leaves an empty last element: append before it.
+        if ($lines[$lines.Count - 1] -eq '') { $lines.RemoveAt($lines.Count - 1) }
+        else { $lines[$lines.Count - 1] += $appendedLineEnding }
+        foreach ($key in $missing) { $lines.Add("$key = $($Setting[$key])$appendedLineEnding") }
         $lines.Add('')
     }
 

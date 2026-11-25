@@ -6,6 +6,8 @@
         Sets dd_configuration_option = ensure_active, isolated_virtual_display_option = enabled,
         mouse = disabled and keyboard = disabled in sunshine.conf. Writes a timestamped backup first.
         Needs administrator rights when Apollo lives under Program Files.
+    .PARAMETER ApolloPath
+        Apollo installation folder. Defaults to "Apollo" under Program Files.
     .PARAMETER RestartService
         Restart the ApolloService afterwards so the settings take effect.
     .EXAMPLE
@@ -30,6 +32,8 @@
     if (-not (Test-Path -LiteralPath $confFile)) {
         throw "sunshine.conf wurde nicht gefunden: $confFile. Ist Apollo installiert? Sonst -ApolloPath angeben."
     }
+    # .NET file APIs resolve relative paths against the process directory, not the PowerShell location.
+    $confFile = (Resolve-Path -LiteralPath $confFile).ProviderPath
 
     $before = [System.IO.File]::ReadAllText($confFile)
     $after = Merge-ApolloConfig -Text $before -Setting $isolation
@@ -40,13 +44,12 @@
         $backup = '{0}.{1:yyyyMMdd-HHmmss}.bak' -f $confFile, (Get-Date)
         try {
             Copy-Item -LiteralPath $confFile -Destination $backup -ErrorAction Stop
+            # Apollo reads the raw bytes, a BOM would corrupt the first key.
             [System.IO.File]::WriteAllText($confFile, $after, [System.Text.UTF8Encoding]::new($false))
         }
-        catch [System.UnauthorizedAccessException] {
-            throw "Kein Schreibzugriff auf $confFile. PowerShell als Administrator starten und erneut ausführen."
-        }
         catch {
-            if ($_.Exception -is [System.UnauthorizedAccessException] -or $_.CategoryInfo.Category -eq 'PermissionDenied') {
+            $denied = $_.Exception -is [System.UnauthorizedAccessException] -or $_.CategoryInfo.Category -eq 'PermissionDenied'
+            if ($denied) {
                 throw "Kein Schreibzugriff auf $confFile. PowerShell als Administrator starten und erneut ausführen."
             }
             throw
@@ -55,6 +58,11 @@
     }
 
     if ($RestartService -and $PSCmdlet.ShouldProcess('ApolloService', 'Dienst neu starten')) {
-        Restart-Service -Name 'ApolloService' -ErrorAction Stop
+        try {
+            Restart-Service -Name 'ApolloService' -ErrorAction Stop
+        }
+        catch {
+            throw "ApolloService ließ sich nicht neu starten. Dafür braucht es Administratorrechte. Fehler: $($_.Exception.Message)"
+        }
     }
 }

@@ -34,6 +34,16 @@ Describe 'Merge-ApolloConfig' {
         Merge-ApolloConfig -Text $text -Setting @{ mouse = 'disabled' } | Should -BeExactly $text
     }
 
+    It 'matches keys case-sensitively, like Apollo does' {
+        $result = Merge-ApolloConfig -Text "Mouse = enabled`n" -Setting @{ mouse = 'disabled' }
+        $result | Should -BeExactly "Mouse = enabled`nmouse = disabled`n"
+    }
+
+    It 'keeps an inline comment after the value' {
+        $result = Merge-ApolloConfig -Text "mouse = enabled # set by hand`n" -Setting @{ mouse = 'disabled' }
+        $result | Should -BeExactly "mouse = disabled # set by hand`n"
+    }
+
     It 'does not add a newline to a file without one when nothing is appended' {
         Merge-ApolloConfig -Text 'mouse = enabled' -Setting @{ mouse = 'disabled' } | Should -BeExactly 'mouse = disabled'
     }
@@ -76,6 +86,19 @@ Describe 'Set-LichiiGamepadApolloConfig' {
         Get-ChildItem -LiteralPath (Split-Path $Conf) -Filter '*.bak' | Remove-Item
         Set-LichiiGamepadApolloConfig -ApolloPath $Apollo -Confirm:$false
         @(Get-ChildItem -LiteralPath (Split-Path $Conf) -Filter '*.bak').Count | Should -Be 0
+    }
+
+    It 'accepts a path relative to the current location' {
+        Push-Location -LiteralPath $TestDrive
+        try { Set-LichiiGamepadApolloConfig -ApolloPath 'Apollo' -Confirm:$false }
+        finally { Pop-Location }
+        (ConvertFrom-ApolloConfig -Text (Get-Content -LiteralPath $Conf -Raw))['keyboard'] | Should -Be 'disabled'
+    }
+
+    It 'explains a failed service restart, e.g. without administrator rights' {
+        Mock Restart-Service -ModuleName LichiiGamepad { throw 'Cannot open ApolloService service on computer.' }
+        { Set-LichiiGamepadApolloConfig -ApolloPath $Apollo -RestartService -Confirm:$false } |
+            Should -Throw -ExpectedMessage '*ApolloService*Administrator*'
     }
 
     It 'fails clearly when sunshine.conf does not exist' {
