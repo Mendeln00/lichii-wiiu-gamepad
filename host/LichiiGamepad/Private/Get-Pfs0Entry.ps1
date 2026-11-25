@@ -1,14 +1,15 @@
-﻿function Get-Pfs0FileName {
+﻿function Get-Pfs0Entry {
     <#
     .SYNOPSIS
-        Lists the file names in a PFS0 header, the container format of .nsp files.
+        Lists the files in a PFS0 header, the container format of .nsp files: Name, Offset and Size.
     .DESCRIPTION
         Pure function. Expects the first bytes of the file and returns nothing when they hold no
         complete PFS0 header. Layout: "PFS0", file count, size of the name table, a reserved field,
-        then 0x18 bytes per file (offset, size, name offset, reserved) and the zero-terminated names.
+        then 0x18 bytes per file (data offset, size, name offset, reserved) and the zero-terminated
+        names. Offset is counted from the start of the file, the data follows right after the header.
     #>
     [CmdletBinding()]
-    [OutputType([string])]
+    [OutputType([pscustomobject])]
     param(
         [Parameter(Mandatory)][AllowEmptyCollection()][byte[]]$Bytes
     )
@@ -21,10 +22,15 @@
     if ($tableEnd -gt $Bytes.Length) { return }
 
     for ($i = 0; $i -lt $count; $i++) {
-        $start = $tableStart + [BitConverter]::ToUInt32($Bytes, [int](16 + 24 * $i + 16))
+        $entry = [int](16 + 24 * $i)
+        $start = $tableStart + [BitConverter]::ToUInt32($Bytes, $entry + 16)
         if ($start -ge $tableEnd) { return }
         $end = [Array]::IndexOf($Bytes, [byte]0, [int]$start, [int]($tableEnd - $start))
         if ($end -lt 0) { $end = $tableEnd }
-        [System.Text.Encoding]::ASCII.GetString($Bytes, [int]$start, [int]($end - $start))
+        [pscustomobject][ordered]@{
+            Name   = [System.Text.Encoding]::ASCII.GetString($Bytes, [int]$start, [int]($end - $start))
+            Offset = $tableEnd + [long][BitConverter]::ToUInt64($Bytes, $entry)
+            Size   = [long][BitConverter]::ToUInt64($Bytes, $entry + 8)
+        }
     }
 }

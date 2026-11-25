@@ -1,30 +1,52 @@
 ﻿BeforeAll {
     Import-Module (Join-Path $PSScriptRoot '..\LichiiGamepad\LichiiGamepad.psd1') -Force
 
-    # Writes a minimal PFS0 header, the container format of .nsp files, that lists the given file names.
+    # Writes a PFS0 container, the format of .nsp files, with the given file names and optional contents.
     function New-NspFile {
         [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '')]
-        param([string]$Path, [string[]]$Names)
+        param([string]$Path, [string[]]$Names, [hashtable]$Data = @{})
         $table = [System.Collections.Generic.List[byte]]::new()
-        $offsets = @()
+        $content = [System.Collections.Generic.List[byte]]::new()
+        $entries = @()
         foreach ($name in $Names) {
-            $offsets += $table.Count
+            $bytes = [byte[]]@()
+            if ($Data.ContainsKey($name)) { $bytes = [byte[]]$Data[$name] }
+            $entries += , @($content.Count, $bytes.Length, $table.Count)
+            $content.AddRange($bytes)
             $table.AddRange([System.Text.Encoding]::ASCII.GetBytes($name))
             $table.Add(0)
         }
-        $bytes = [System.Collections.Generic.List[byte]]::new()
-        $bytes.AddRange([System.Text.Encoding]::ASCII.GetBytes('PFS0'))
-        $bytes.AddRange([BitConverter]::GetBytes([uint32]$Names.Count))
-        $bytes.AddRange([BitConverter]::GetBytes([uint32]$table.Count))
-        $bytes.AddRange([BitConverter]::GetBytes([uint32]0))
-        foreach ($offset in $offsets) {
-            $bytes.AddRange([BitConverter]::GetBytes([uint64]0))
-            $bytes.AddRange([BitConverter]::GetBytes([uint64]0))
-            $bytes.AddRange([BitConverter]::GetBytes([uint32]$offset))
-            $bytes.AddRange([BitConverter]::GetBytes([uint32]0))
+        $file = [System.Collections.Generic.List[byte]]::new()
+        $file.AddRange([System.Text.Encoding]::ASCII.GetBytes('PFS0'))
+        $file.AddRange([BitConverter]::GetBytes([uint32]$Names.Count))
+        $file.AddRange([BitConverter]::GetBytes([uint32]$table.Count))
+        $file.AddRange([BitConverter]::GetBytes([uint32]0))
+        foreach ($entry in $entries) {
+            $file.AddRange([BitConverter]::GetBytes([uint64]$entry[0]))
+            $file.AddRange([BitConverter]::GetBytes([uint64]$entry[1]))
+            $file.AddRange([BitConverter]::GetBytes([uint32]$entry[2]))
+            $file.AddRange([BitConverter]::GetBytes([uint32]0))
         }
-        $bytes.AddRange($table)
-        [System.IO.File]::WriteAllBytes($Path, $bytes.ToArray())
+        $file.AddRange($table)
+        $file.AddRange($content)
+        [System.IO.File]::WriteAllBytes($Path, $file.ToArray())
+    }
+
+    # A made-up header_key for the tests, not a real one.
+    $script:TestKey = [byte[]](0..31)
+    $script:TestKeyHex = -join ($TestKey | ForEach-Object { '{0:x2}' -f $_ })
+
+    # The encrypted header of a content meta NCA (.cnmt.nca) for the given title ID.
+    function Get-CnmtHeader {
+        param([uint64]$ProgramId)
+        $plain = New-Object byte[] 0x400
+        [System.Text.Encoding]::ASCII.GetBytes('NCA3').CopyTo($plain, 0x200)
+        $plain[0x205] = 1
+        [BitConverter]::GetBytes($ProgramId).CopyTo($plain, 0x210)
+        InModuleScope LichiiGamepad -Parameters @{ Plain = $plain; Key = $script:TestKey } {
+            param($Plain, $Key)
+            , (Invoke-AesXtsTransform -Data $Plain -Key $Key -Encrypt)
+        }
     }
 
     function New-File {
@@ -76,13 +98,46 @@
         [System.IO.File]::WriteAllText($AppsFile, ($document | ConvertTo-Json -Depth 10))
     }
 
+    # Never reads the real prod.keys of this PC: KeysPath points to a test file unless a test says otherwise.
     function Invoke-Profile {
+        [CmdletBinding()]
         param([hashtable]$Extra = @{ LichiiPath = $script:Lichii })
-        New-LichiiGamepadGameProfile -GamePath $script:Games -ApolloPath $script:Apollo -Confirm:$false @Extra 6>$null
+        $arguments = @{ KeysPath = (Join-Path $TestDrive 'fehlt.keys') }
+        foreach ($key in $Extra.Keys) { $arguments[$key] = $Extra[$key] }
+        New-LichiiGamepadGameProfile -GamePath $script:Games -ApolloPath $script:Apollo -Confirm:$false @arguments 6>$null
+    }
+
+    # A GameDB with the Switch game "Spiel B" (ID 11) and its DLC (ID 12). The entry "Spiel B" with
+    # ID 10 ranks first but has neither platforms nor a cover, as some GameDB records do.
+    function Get-FakeGameDb {
+        param([string]$Path)
+        switch ($Path) {
+            'buckets/sp.json' {
+                [pscustomobject]@{
+                    '10' = [pscustomobject]@{ name = 'Spiel B' }
+                    '11' = [pscustomobject]@{ name = 'Spiel B' }
+                    '12' = [pscustomobject]@{ name = 'Spiel B: Erweiterung' }
+                }
+            }
+            'games/10.json' { [pscustomobject]@{ name = 'Spiel B' } }
+            'games/11.json' {
+                [pscustomobject]@{ name = 'Spiel B'; platforms = @(130); cover = [pscustomobject]@{ url = '//images.igdb.com/igdb/image/upload/t_thumb/cob11.jpg' } }
+            }
+            'games/12.json' {
+                [pscustomobject]@{ name = 'Spiel B: Erweiterung'; platforms = @(130); cover = [pscustomobject]@{ url = '//images.igdb.com/igdb/image/upload/t_thumb/cob12.jpg' } }
+            }
+            default { [pscustomobject]@{} }
+        }
     }
 }
 
 Describe 'New-LichiiGamepadGameProfile' {
+    BeforeAll {
+        # No test goes online: an empty GameDB unless a test brings its own.
+        Mock -ModuleName LichiiGamepad Invoke-GameDbRequest { [pscustomobject]@{} }
+        Mock -ModuleName LichiiGamepad Save-WebFile { [System.IO.File]::WriteAllBytes($Path, [byte[]](137, 80, 78, 71)) }
+    }
+
     BeforeEach { New-TestLayout }
 
     It 'creates a profile for a cartridge image, a base game and an extracted game' {
@@ -107,9 +162,93 @@ Describe 'New-LichiiGamepadGameProfile' {
         $app.uuid | Should -MatchExactly '^[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}$'
     }
 
-    It 'leaves out the cover when there is no PNG, because Apollo shows only PNG files' {
+    It 'leaves out the cover when there is no PNG and none online, because Apollo shows only PNG files' {
         Invoke-Profile | Out-Null
         (Get-App 'Spiel B').PSObject.Properties.Name | Should -Not -Contain 'image-path'
+    }
+
+    Context '.nsp without a ticket' {
+        BeforeEach {
+            New-NspFile (Join-Path $Games 'Spiel D.nsp') @('dd.cnmt.nca') @{ 'dd.cnmt.nca' = (Get-CnmtHeader -ProgramId 0x0100000000020000) }
+            New-NspFile (Join-Path $Games 'Spiel D Update.nsp') @('aa.nca', 'ee.cnmt.nca') @{
+                'aa.nca'      = (New-Object byte[] 0x400)
+                'ee.cnmt.nca' = (Get-CnmtHeader -ProgramId 0x0100000000020800)
+            }
+            $script:Keys = Join-Path $TestDrive 'prod.keys'
+            [System.IO.File]::WriteAllText($Keys, "header_key = $TestKeyHex`r`nother_key = 00`r`n")
+        }
+
+        It 'reads the title ID from the content meta with the header_key from prod.keys and skips the update' {
+            Invoke-Profile -Extra @{ LichiiPath = $Lichii; KeysPath = $Keys } | Out-Null
+            Get-App 'Spiel D' | Should -Not -BeNullOrEmpty
+            Get-App 'Spiel D Update' | Should -BeNullOrEmpty
+        }
+
+        It 'gives no profile and warns when prod.keys is missing, because it may be an update' {
+            Invoke-Profile -Extra @{ LichiiPath = $Lichii } -WarningVariable warnings 3>$null | Out-Null
+            Get-App 'Spiel D' | Should -BeNullOrEmpty
+            Get-App 'Spiel D Update' | Should -BeNullOrEmpty
+            ($warnings -join "`n") | Should -Match 'Spiel D Update\.nsp.*prod\.keys'
+        }
+
+        It 'gives no profile when the key is wrong' {
+            [System.IO.File]::WriteAllText($Keys, "header_key = $('ab' * 32)`r`n")
+            Invoke-Profile -Extra @{ LichiiPath = $Lichii; KeysPath = $Keys } 3>$null | Out-Null
+            Get-App 'Spiel D Update' | Should -BeNullOrEmpty
+        }
+    }
+
+    Context 'cover from the internet' {
+        BeforeEach {
+            Mock -ModuleName LichiiGamepad Invoke-GameDbRequest { Get-FakeGameDb -Path $Path }
+            $script:CoverFile = Join-Path $Apollo 'config\covers\igdb_11.png'
+        }
+
+        It 'downloads the Switch box art as PNG into Apollo''s covers folder, the way Apollo does' {
+            Invoke-Profile | Out-Null
+            Should -Invoke -ModuleName LichiiGamepad Save-WebFile -Times 1 -Exactly -ParameterFilter {
+                $Uri -eq 'https://images.igdb.com/igdb/image/upload/t_cover_big_2x/cob11.png' -and $Path -eq $CoverFile
+            }
+            (Get-App 'Spiel B').'image-path' | Should -BeExactly $CoverFile
+        }
+
+        It 'looks up only games without a PNG of their own' {
+            Invoke-Profile | Out-Null
+            Should -Invoke -ModuleName LichiiGamepad Save-WebFile -Times 1 -Exactly
+            (Get-App 'Spiel A').'image-path' | Should -BeExactly (Join-Path $Games 'Spiel A.png')
+        }
+
+        It 'takes only covers for Nintendo Switch' {
+            Mock -ModuleName LichiiGamepad Invoke-GameDbRequest {
+                if ($Path -like 'games/*') { [pscustomobject]@{ name = 'Spiel B'; platforms = @(6); cover = [pscustomobject]@{ url = '//x/t_thumb/pc.jpg' } } }
+                else { Get-FakeGameDb -Path $Path }
+            }
+            Invoke-Profile | Out-Null
+            Should -Invoke -ModuleName LichiiGamepad Save-WebFile -Times 0 -Exactly
+            (Get-App 'Spiel B').PSObject.Properties.Name | Should -Not -Contain 'image-path'
+        }
+
+        It 'reuses a cover that is already in Apollo''s covers folder' {
+            New-File $CoverFile
+            Invoke-Profile | Out-Null
+            Should -Invoke -ModuleName LichiiGamepad Save-WebFile -Times 0 -Exactly
+            (Get-App 'Spiel B').'image-path' | Should -BeExactly $CoverFile
+        }
+
+        It 'creates the profile without a cover and warns when the search fails' {
+            Mock -ModuleName LichiiGamepad Invoke-GameDbRequest { throw 'offline' }
+            Invoke-Profile -WarningVariable warnings 3>$null | Out-Null
+            Get-App 'Spiel B' | Should -Not -BeNullOrEmpty
+            ($warnings -join "`n") | Should -Match 'Spiel B.*offline'
+        }
+
+        It 'makes no request with -SkipCoverDownload and downloads nothing with -WhatIf' {
+            Invoke-Profile -Extra @{ LichiiPath = $Lichii; SkipCoverDownload = $true } | Out-Null
+            Should -Invoke -ModuleName LichiiGamepad Invoke-GameDbRequest -Times 0 -Exactly
+            New-TestLayout
+            New-LichiiGamepadGameProfile -GamePath $Games -LichiiPath $Lichii -ApolloPath $Apollo -KeysPath (Join-Path $TestDrive 'fehlt.keys') -WhatIf 6>$null | Out-Null
+            Should -Invoke -ModuleName LichiiGamepad Save-WebFile -Times 0 -Exactly
+        }
     }
 
     It 'starts the newest version of an extracted game and takes the PNG inside its folder' {
@@ -219,5 +358,94 @@ Describe 'Merge-ApolloAppList' {
 
     It 'accepts an empty game list' {
         (Merge-ApolloAppList -Json $Empty -Game @() -LichiiPath 'C:\L\lichii.exe').Json | Should -BeExactly $Empty
+    }
+}
+
+Describe 'Cover search' {
+    It 'reduces a file name to the words of the game: <Name>' -ForEach @(
+        @{ Name = 'pokopia.v2.0.1a.DUMP'; Words = @('pokopia') }
+        @{ Name = 'v-pokemon_lets_go_eevee'; Words = @('pokemon', 'lets', 'go', 'eevee') }
+        @{ Name = "Pokémon: Let's Go, Eevee!"; Words = @('pokemon', 'lets', 'go', 'eevee') }
+        @{ Name = 'Spiel [0100ABF008968000][v131072] (EUR)'; Words = @('spiel') }
+    ) {
+        InModuleScope LichiiGamepad -Parameters @{ Name = $Name } { param($Name) @(ConvertTo-GameSearchToken -Name $Name) } |
+            Should -Be $Words
+    }
+
+    It 'prefers the game whose name lies fully in the file name over bundles and DLC' {
+        $best = InModuleScope LichiiGamepad {
+            $entries = @(
+                [pscustomobject]@{ Id = 2; Name = "Pokémon: Let's Go, Eevee! + Poké Ball Plus Pack" }
+                [pscustomobject]@{ Id = 3; Name = 'Pokémon Go' }
+                [pscustomobject]@{ Id = 4; Name = 'Pokémon' }
+                [pscustomobject]@{ Id = 1; Name = "Pokémon: Let's Go, Eevee!" }
+            )
+            @(Select-GameDbMatch -Name 'v-pokemon_lets_go_eevee' -Entry $entries)[0]
+        }
+        $best.Id | Should -Be 1
+    }
+
+    It 'finds the main game for a file with a title ID and version, not its expansion' {
+        $best = InModuleScope LichiiGamepad {
+            $entries = @(
+                [pscustomobject]@{ Id = 135164; Name = 'Pokémon Sword: The Isle of Armor' }
+                [pscustomobject]@{ Id = 294432; Name = 'Pokémon Sword and Shield' }
+                [pscustomobject]@{ Id = 37382; Name = 'Pokémon Sword' }
+            )
+            @(Select-GameDbMatch -Name 'Pokemon Sword [0100ABF008968000][v0]' -Entry $entries)[0]
+        }
+        $best.Id | Should -Be 37382
+    }
+
+    It 'finds a GameDB name with accents and apostrophes for a plain file name' {
+        Mock -ModuleName LichiiGamepad Invoke-GameDbRequest {
+            switch ($Path) {
+                'buckets/le.json' {
+                    [pscustomobject]@{
+                        '7' = [pscustomobject]@{ name = "Let’s Pokémon!" }
+                        '8' = [pscustomobject]@{ name = 'Lemmings' }
+                    }
+                }
+                'games/7.json' {
+                    [pscustomobject]@{
+                        name      = "Let’s Pokémon!"
+                        platforms = @([pscustomobject]@{ id = 508 })
+                        cover     = [pscustomobject]@{ url = '//images.igdb.com/igdb/image/upload/t_thumb/co7.jpg' }
+                    }
+                }
+                default { [pscustomobject]@{} }
+            }
+        }
+        $cover = InModuleScope LichiiGamepad { Find-GameCover -Name 'lets_pokemon' }
+        $cover.Id | Should -Be 7
+        $cover.Url | Should -BeExactly 'https://images.igdb.com/igdb/image/upload/t_cover_big_2x/co7.png'
+    }
+
+    It 'finds nothing for an unrelated name rather than a wrong cover' {
+        InModuleScope LichiiGamepad {
+            @(Select-GameDbMatch -Name 'Mein Spiel' -Entry @([pscustomobject]@{ Id = 1; Name = 'Pokémon Sword' }))
+        } | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'NCA header decryption' {
+    It 'matches the first XTS-AES-128 test vector of IEEE 1619 (sector 0, zero keys)' {
+        $cipher = [byte[]]@(
+            0x91, 0x7c, 0xf6, 0x9e, 0xbd, 0x68, 0xb2, 0xec, 0x9b, 0x9f, 0xe9, 0xa3, 0xea, 0xdd, 0xa6, 0x92,
+            0xcd, 0x43, 0xd2, 0xf5, 0x95, 0x98, 0xed, 0x85, 0x8c, 0x02, 0xc2, 0x65, 0x2f, 0xbf, 0x92, 0x2e)
+        $plain = InModuleScope LichiiGamepad -Parameters @{ Cipher = $cipher } {
+            param($Cipher) , (Invoke-AesXtsTransform -Data $Cipher -Key (New-Object byte[] 32))
+        }
+        $plain | Should -Be (New-Object byte[] 32)
+    }
+
+    It 'reads ContentType and ProgramId from an encrypted header' {
+        $header = Get-CnmtHeader -ProgramId 0x0100000000020800
+        $nca = InModuleScope LichiiGamepad -Parameters @{ Header = $header; Key = $TestKey } {
+            param($Header, $Key) ConvertFrom-NcaHeader -Bytes $Header -HeaderKey $Key
+        }
+        $nca.Magic | Should -Be 'NCA3'
+        $nca.ContentType | Should -Be 1
+        $nca.ProgramId | Should -Be 0x0100000000020800
     }
 }

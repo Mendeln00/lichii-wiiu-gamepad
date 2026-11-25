@@ -24,24 +24,13 @@
         [scriptblock]$NewUuid = { [guid]::NewGuid().ToString().ToUpperInvariant() }
     )
 
-    $started = [System.Collections.Generic.List[string]]::new()
-    foreach ($app in @(ConvertFrom-ApolloAppList -Json $Json)) {
-        if ($app.GamePath) { $started.Add($app.GamePath.Replace('/', '\')) }
-    }
-
     $document = $Json | ConvertFrom-Json
     $apps = @()
     if ($document.PSObject.Properties.Name -contains 'apps') { $apps = @($document.apps) }
     $workingDir = Split-Path -Path $LichiiPath -Parent
     $added = @()
 
-    foreach ($item in $Game) {
-        $root = $item.Root.TrimEnd('\')
-        $known = @($started | Where-Object {
-                $_ -ieq $root -or $_.StartsWith("$root\", [System.StringComparison]::OrdinalIgnoreCase)
-            })
-        if ($known.Count -gt 0) { continue }
-
+    foreach ($item in @(Select-UnprofiledGame -Json $Json -Game $Game)) {
         $app = [ordered]@{
             name          = $item.Name
             cmd           = "`"$LichiiPath`" -f -g `"$($item.Path)`""
@@ -53,7 +42,6 @@
 
         $apps += [pscustomobject]$app
         $added += $item
-        $started.Add($item.Path)
     }
 
     if ($added.Count -eq 0) {

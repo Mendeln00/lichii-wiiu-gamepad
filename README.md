@@ -64,7 +64,9 @@ Apollo auf Isolation einstellen (als Administrator, mit Backup, `-WhatIf` zeigt 
 Set-LichiiGamepadApolloConfig -RestartService
 ```
 
-Für jedes Spiel im Spieleordner ein Spielprofil in Apollo anlegen (als Administrator, mit Backup von `apps.json`, `-WhatIf` geht auch hier). Erkannt werden `.xci`, `.nsp` von Basisspielen und entpackte Spiele (ein Ordner mit `exefs\main`). Updates und DLC als `.nsp` bekommen kein Profil. Als Cover dient eine PNG‑Datei mit gleichem Namen neben dem Spiel, bei entpackten Spielen die erste PNG‑Datei im Ordner. Spiele, die schon ein Profil haben, bleiben unberührt, auch wenn man das Profil umbenannt hat. `lichii.exe` nimmt der Befehl aus einem vorhandenen Profil, sonst gibt man `-LichiiPath` an. Der Neustart von Apollo beendet einen laufenden Stream:
+Für jedes Spiel im Spieleordner ein Spielprofil in Apollo anlegen (als Administrator, mit Backup von `apps.json`, `-WhatIf` geht auch hier). Erkannt werden `.xci`, `.nsp` von Basisspielen und entpackte Spiele (ein Ordner mit `exefs\main`). Updates und DLC als `.nsp` bekommen kein Profil. Hat eine `.nsp` kein Ticket, liest der Befehl ihre Titel‑ID mit dem `header_key` aus der `prod.keys` von Lichii. Er sucht sie unter `%APPDATA%\lichii\keys` und `user\keys` neben `lichii.exe`, sonst gibt man `-KeysPath` an. Der Schlüssel bleibt auf dem PC. Ohne Schlüssel bekommt so eine Datei kein Profil, nur eine Warnung, denn sie könnte ein Update sein.
+
+Als Cover dient eine PNG‑Datei mit gleichem Namen neben dem Spiel, bei entpackten Spielen die erste PNG‑Datei im Ordner. Fehlt sie, sucht der Befehl wie „Find Cover“ in Apollo in der [GameDB](https://github.com/LizardByte/GameDB) nach dem Spiel für die Switch. Er lädt die Hülle hochkant mit dem Spielnamen darauf als PNG nach `config\covers` von Apollo. Wer das nicht will, gibt `-SkipCoverDownload` an. Spiele, die schon ein Profil haben, bleiben unberührt, auch wenn man das Profil umbenannt hat. `lichii.exe` nimmt der Befehl aus einem vorhandenen Profil, sonst gibt man `-LichiiPath` an. Der Neustart von Apollo beendet einen laufenden Stream:
 
 ```powershell
 New-LichiiGamepadGameProfile -GamePath 'D:\Spiele' -RestartService

@@ -4,8 +4,10 @@
         Lists the games in a games folder: .xci files, .nsp files of base games and extracted games.
     .DESCRIPTION
         Looks at the top level of the folder only.
-        - An .nsp counts when its ticket names a base game. The low 13 bits of the title ID are 0 for
-          the game, 0x800 for its update and higher for DLC. An .nsp without a ticket counts as a game.
+        - An .nsp counts when its title ID belongs to a base game: the low 13 bits are 0 for the game,
+          0x800 for its update and higher for DLC. The title ID comes from the ticket, or without one
+          from the content meta, which needs HeaderKey. An .nsp whose title ID stays unknown gets no
+          profile and a warning, since it may be an update.
         - A folder counts as an extracted game when it holds exefs\main. With several versions inside,
           the main with the highest number in its path wins (updates\131072 beats base).
         - The cover is the PNG with the same name next to the file, or the first PNG inside the folder
@@ -15,7 +17,8 @@
     [CmdletBinding()]
     [OutputType([pscustomobject])]
     param(
-        [Parameter(Mandatory)][string]$Path
+        [Parameter(Mandatory)][string]$Path,
+        [byte[]]$HeaderKey
     )
 
     foreach ($item in @(Get-ChildItem -LiteralPath $Path | Sort-Object Name)) {
@@ -45,8 +48,14 @@
 
         if ($item.Extension -notin @('.xci', '.nsp')) { continue }
         if ($item.Extension -eq '.nsp') {
-            $titleId = Read-NspTitleId -Path $item.FullName
-            if ($null -ne $titleId -and ($titleId -band 0x1FFF) -ne 0) {
+            $titleId = Read-NspTitleId -Path $item.FullName -HeaderKey $HeaderKey
+            if ($null -eq $titleId) {
+                $reason = 'Die Datei hat kein Ticket, und ihre Metadaten ließen sich nicht lesen.'
+                if ($null -eq $HeaderKey) { $reason = 'Die Datei hat kein Ticket, und prod.keys von Lichii wurde nicht gefunden (-KeysPath).' }
+                Write-Warning "Kein Spielprofil für $($item.Name): Ob es ein Spiel oder ein Update ist, ließ sich nicht prüfen. $reason"
+                continue
+            }
+            if (($titleId -band 0x1FFF) -ne 0) {
                 Write-Verbose "Übersprungen, Update oder DLC (Titel-ID $('{0:X16}' -f $titleId)): $($item.Name)"
                 continue
             }
