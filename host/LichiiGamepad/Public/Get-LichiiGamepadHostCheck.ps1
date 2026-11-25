@@ -124,5 +124,29 @@
             New-HostCheck -Id 'lichii-dsu-server' -Area Eingabe -Status Warn -Message 'In Lichii ist kein DSU-Server eingetragen.' `
                 -Fix 'Set-LichiiGamepadLichiiConfig ausführen (Toffee: 127.0.0.1:26760) oder mit -DsuServer die Adresse der Brücke angeben.'
         }
+
+        # --- Ton: Spielton auf einem eigenen Gerät (ADR 0004) -----------------
+        $audio = Get-ConfigValue -Table $State.LichiiConfig -Key 'Audio'
+        $device = Get-LichiiSetting -Section $audio -Key 'output_device' -Default 'auto'
+        if ($device -in @('auto', '')) {
+            New-HostCheck -Id 'audio-isolated' -Area Ton -Status Warn `
+                -Message 'Lichii spielt auf dem Windows-Standardgerät. Spielton und übriger PC-Ton lassen sich dann nicht trennen.' `
+                -Fix "Ein eigenes Wiedergabegerät einrichten (etwa VB-CABLE) und Set-LichiiGamepadLichiiConfig -AudioDevice '<Anzeigename>' ausführen (Lichii vorher beenden)."
+        }
+        elseif ($null -eq $State.PlaybackDevices) {
+            New-HostCheck -Id 'audio-isolated' -Area Ton -Status Warn `
+                -Message "Lichii soll auf `"$device`" spielen. Ob es dieses Gerät gibt, ließ sich nicht prüfen." `
+                -Fix 'In den Windows-Soundeinstellungen nachsehen, ob das Wiedergabegerät genau so heißt und aktiv ist.'
+        }
+        # Lichii (cubeb, SDL3) compares the exact friendly name of active devices and
+        # falls back to the default device without logging anything.
+        elseif ($State.PlaybackDevices -cnotcontains $device) {
+            New-HostCheck -Id 'audio-isolated' -Area Ton -Status Warn `
+                -Message "Lichii soll auf `"$device`" spielen, aber kein aktives Wiedergabegerät heißt genau so. Lichii spielt dann ohne Meldung auf dem Standardgerät." `
+                -Fix "Set-LichiiGamepadLichiiConfig -AudioDevice mit einem dieser Namen ausführen: $($State.PlaybackDevices -join '; ')"
+        }
+        else {
+            New-HostCheck -Id 'audio-isolated' -Area Ton -Status Pass -Message "Lichii spielt auf ein eigenes Gerät: $device."
+        }
     }
 }

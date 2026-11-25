@@ -23,7 +23,9 @@
                     'enable_udp_controller\default' = 'false'; enable_udp_controller = 'true'
                     'udp_input_servers\default' = 'false'; udp_input_servers = '192.168.0.50:26760'
                 }
+                Audio    = @{ 'output_device\default' = 'false'; output_device = 'CABLE Input (VB-Audio Virtual Cable)' }
             }
+            PlaybackDevices       = @('Lautsprecher (Realtek(R) Audio)', 'CABLE Input (VB-Audio Virtual Cable)')
         }
         foreach ($key in $Override.Keys) { $state[$key] = $Override[$key] }
         [pscustomobject]$state
@@ -115,6 +117,38 @@ Describe 'Get-LichiiGamepadHostCheck' {
             $check = Get-Check (New-TestState @{ ApolloApps = $apps }) 'game-profile'
             $check.Status | Should -Be 'Warn'
             $check.Message | Should -Match 'Spiel'
+        }
+    }
+
+    Context 'isolation of game audio' {
+        It 'warns when Lichii plays on the default device, mixed with the PC sound' {
+            $state = New-TestState
+            $state.LichiiConfig['Audio']['output_device\default'] = 'true'
+            $check = Get-Check $state 'audio-isolated'
+            $check.Area | Should -Be 'Ton'
+            $check.Status | Should -Be 'Warn'
+            $check.Fix | Should -Match '-AudioDevice'
+        }
+
+        It 'passes when Lichii plays on an active playback device of its own' {
+            $check = Get-Check (New-TestState) 'audio-isolated'
+            $check.Status | Should -Be 'Pass'
+            $check.Message | Should -Match 'CABLE Input'
+        }
+
+        It 'warns when no active playback device has that exact name, because Lichii then silently plays on the default device' {
+            $state = New-TestState
+            $state.LichiiConfig['Audio']['output_device'] = 'CABLE Input'
+            $check = Get-Check $state 'audio-isolated'
+            $check.Status | Should -Be 'Warn'
+            $check.Message | Should -Match 'Standardgerät'
+            $check.Fix | Should -Match ([regex]::Escape('CABLE Input (VB-Audio Virtual Cable)'))
+        }
+
+        It 'warns when the playback devices could not be read' {
+            $check = Get-Check (New-TestState @{ PlaybackDevices = $null }) 'audio-isolated'
+            $check.Status | Should -Be 'Warn'
+            $check.Message | Should -Match 'nicht prüfen'
         }
     }
 

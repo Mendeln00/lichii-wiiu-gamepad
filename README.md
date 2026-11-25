@@ -70,6 +70,12 @@ DSU in Lichii einschalten (Lichii vorher beenden, mit Backup, `-WhatIf` geht auc
 Set-LichiiGamepadLichiiConfig
 ```
 
+Den Spielton auf ein eigenes Gerät legen, etwa [VB‑CABLE](https://vb-audio.com/Cable/). Der Name muss genau so lauten wie in den Windows‑Soundeinstellungen, sonst spielt Lichii ohne Meldung auf dem Standardgerät. Erst einstellen, wenn die Brücke dieses Gerät aufnimmt, sonst ist das Spiel nirgends zu hören. Toffee kann das noch nicht ([research/audio-isolation.md](research/audio-isolation.md)). `-AudioDevice auto` stellt zurück:
+
+```powershell
+Set-LichiiGamepadLichiiConfig -AudioDevice 'CABLE Input (VB-Audio Virtual Cable)'
+```
+
 ## Projektaufbau
 
 | Ordner | Inhalt |

@@ -48,6 +48,14 @@
         Write-Verbose "PnP query failed: $_"
     }
 
+    $playbackDevices = $null
+    try {
+        $playbackDevices = @(Get-PlaybackDeviceName -ErrorAction Stop)
+    }
+    catch {
+        Write-Verbose "Core Audio query failed: $_"
+    }
+
     $vigem = $false
     $service = Get-Service -Name 'ViGEmBus' -ErrorAction SilentlyContinue
     if ($null -ne $service) { $vigem = $service.Status -eq 'Running' }
@@ -60,5 +68,6 @@
         ApolloConfig          = $apolloConfig
         ApolloApps            = $apps
         LichiiConfig          = $lichiiConfig
+        PlaybackDevices       = $playbackDevices
     }
 }

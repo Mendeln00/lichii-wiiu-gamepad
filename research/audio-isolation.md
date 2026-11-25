@@ -154,6 +154,7 @@ output_device=CABLE Input (VB-Audio Virtual Cable)
 - SDL3 vergleicht `SDL_GetAudioDeviceName` exakt ([sdl3_sink.cpp L46-L65](https://github.com/zortos293/Lichii/blob/7cc8a7750c0b98ce87917236d35e57e2f23cc811/src/audio_core/sink/sdl3_sink.cpp#L46-L65)). Unter Windows ist das ebenfalls `PKEY_Device_FriendlyName` ([SDL_immdevice.c L86-L100](https://github.com/libsdl-org/SDL/blob/release-3.4.20/src/core/windows/SDL_immdevice.c#L86-L100)). (belegt)
 - Beide nutzen also den Namen, den Windows in den Sound-Einstellungen zeigt, etwa „Lautsprecher (Adapter)“. Eine Geräte-ID versteht Lichii nicht. (Schluss)
 - Die Oberfläche speichert den Text des gewählten Listeneintrags ([configure_audio.cpp L266-L268, L286-L292](https://github.com/zortos293/Lichii/blob/7cc8a7750c0b98ce87917236d35e57e2f23cc811/src/lichii/configuration/configure_audio.cpp#L266-L292)). (belegt)
+- Der Gerätename in der Windows-Geräteverwaltung (`Win32_PnPEntity`) kann davon abweichen. Am PC des Maintainers am 2026-11-25 gemessen, direkt nach der Installation von VB-CABLE: Die Geräteverwaltung nennt das Gerät „Lautsprecher (VB-Audio Virtual Cable)“, Core Audio (`PKEY_Device_FriendlyName`) dagegen „CABLE Input (VB-Audio Virtual Cable)“. Bei den anderen Geräten waren beide Namen gleich. (belegt am PC) Das Host-Modul liest die Namen deshalb über Core Audio. (Schluss)
 
 ### Wenn das Gerät fehlt
 
@@ -236,8 +237,8 @@ Der Ton-Satz sollte lauten: „Lichii spielt auf ein eigenes Gerät. Die Brücke
 
 ### Prüfen am PC, ohne GamePad
 
-1. **Gerätenamen lesen**: VB-CABLE installieren, dann `tools\audio-info.exe` aus Apollo starten. ID und Namen von „CABLE Input“ notieren.
-2. **Lichii allein**: Lichii beenden, `output_device` setzen, Lichii starten. Im Lautstärkemixer muss Lichii auf „CABLE Input“ stehen. Am PC ist das Spiel nicht zu hören. Musik am PC läuft weiter über die Lautsprecher.
+1. **Gerätenamen lesen**: VB-CABLE installieren, dann `tools\audio-info.exe` aus Apollo starten. ID und Namen von „CABLE Input“ notieren. Den Namen allein zeigt auch `Test-LichiiGamepadHost -Detailed`: Bei falschem Namen listet die Regel `audio-isolated` alle aktiven Wiedergabegeräte auf.
+2. **Lichii allein**: Lichii beenden, `Set-LichiiGamepadLichiiConfig -AudioDevice '<Name>'` ausführen, Lichii starten. Im Lautstärkemixer muss Lichii auf „CABLE Input“ stehen. Am PC ist das Spiel nicht zu hören. Musik am PC läuft weiter über die Lautsprecher.
 3. **Aufnahme statt Brücke**: Mit einer beliebigen Aufnahme-App „CABLE Output“ aufnehmen, während am PC Musik läuft. Die Aufnahme darf nur Lichii enthalten. Das prüft Weg a ganz ohne Brücke.
 4. **Rückfall prüfen**: Einen falschen Namen eintragen. Erwartet: Lichii spielt auf dem Standardgerät, ohne Meldung. Daran testet man die Prüfregel `audio-isolated`.
 5. **Prozess-Loopback**: Das Microsoft-Beispiel ApplicationLoopback bauen und mit `ApplicationLoopback <PID von Lichii> includetree test.wav` starten ([README L36-L39](https://github.com/microsoft/Windows-classic-samples/blob/434f6002bdf9cf9829406c3ff2b33387982d6168/Samples/ApplicationLoopback/README.md?plain=1#L36-L39)). Die WAV-Datei darf nur Lichii enthalten, egal auf welchem Gerät Lichii spielt.
