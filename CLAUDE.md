@@ -14,6 +14,8 @@ Lichii (Switch‑Emulator) über das Wii U GamePad spielen, isoliert vom restlic
 
 ## Agent skills
 
+Arbeitsablauf (welcher Skill bei welchem Schritt, von Triage bis PR): Tabelle „Mit Agent‑Skills arbeiten“ in `CONTRIBUTING.md`.
+
 ### Issue tracker
 
 Issues liegen in den GitHub Issues von `Mendeln00/lichii-wiiu-gamepad` (über die `gh` CLI), gegliedert in Milestones M0–M6. See `docs/agents/issue-tracker.md`.

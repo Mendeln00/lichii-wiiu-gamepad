@@ -1,0 +1,56 @@
+name: Hardware-Bericht
+description: Welcher WLAN-Dongle und welcher Rechner, und was hat geklappt? Auch Fehlschläge helfen.
+labels: [hardware-report, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke! Jeder Bericht hilft, gerade auch über Hardware, die **nicht** funktioniert.
+        Bitte keine Seriennummern, MAC-Adressen, WLAN-Schlüssel oder Keys posten.
+  - type: input
+    id: dongle
+    attributes:
+      label: WLAN-Dongle (Hersteller und Modell)
+      placeholder: z. B. Panda PAU0B
+    validations:
+      required: true
+  - type: input
+    id: chipset
+    attributes:
+      label: Chipsatz und Treiber
+      description: Aus `lsusb` und `ethtool -i <interface>`
+      placeholder: z. B. RT5572 / rt2800usb
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Worauf läuft die Brücke zum GamePad?
+      options:
+        - WSL2 unter Windows (usbipd)
+        - Raspberry Pi
+        - Anderer Linux-Rechner
+        - Wii U als Relay (Plan B)
+    validations:
+      required: true
+  - type: input
+    id: kernel
+    attributes:
+      label: Kernel-Version und Patches
+      placeholder: z. B. 6.6.x mit TSF-Patch
+  - type: checkboxes
+    id: results
+    attributes:
+      label: Was hat geklappt?
+      options:
+        - label: Pairing ohne Wii U
+        - label: GamePad verbindet sich
+        - label: Bild
+        - label: Ton
+        - label: Tasten und Sticks
+        - label: Gyro
+        - label: Touch
+  - type: textarea
+    id: notes
+    attributes:
+      label: Details und Logs
+      description: Was hast du gemacht, was ist passiert? Latenz, Abbrüche, Reichweite.
+      render: text
