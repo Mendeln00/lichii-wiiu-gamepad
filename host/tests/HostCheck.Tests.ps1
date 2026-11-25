@@ -19,7 +19,10 @@
                 [pscustomobject]@{ Name = 'Spiel'; IsLichii = $true; VirtualDisplay = $true; ExecutablePath = 'C:\L\lichii.exe' }
             )
             LichiiConfig          = @{
-                Controls = @{ enable_udp_controller = 'true'; udp_input_servers = '192.168.0.50:26760' }
+                Controls = @{
+                    'enable_udp_controller\default' = 'false'; enable_udp_controller = 'true'
+                    'udp_input_servers\default' = 'false'; udp_input_servers = '192.168.0.50:26760'
+                }
             }
         }
         foreach ($key in $Override.Keys) { $state[$key] = $Override[$key] }
@@ -125,6 +128,12 @@ Describe 'Get-LichiiGamepadHostCheck' {
         It 'ignores a value that a Qt default marker overrides, as Lichii does' {
             $state = New-TestState
             $state.LichiiConfig['Controls']['enable_udp_controller\default'] = 'true'
+            (Get-Check $state 'lichii-dsu-enabled').Status | Should -Be 'Warn'
+        }
+
+        It 'uses the built-in default when the marker is missing, as Lichii does' {
+            $state = New-TestState
+            $state.LichiiConfig['Controls'].Remove('enable_udp_controller\default')
             (Get-Check $state 'lichii-dsu-enabled').Status | Should -Be 'Warn'
         }
 
