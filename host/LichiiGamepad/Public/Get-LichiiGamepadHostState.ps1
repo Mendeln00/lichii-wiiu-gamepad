@@ -69,5 +69,6 @@
         ApolloApps            = $apps
         LichiiConfig          = $lichiiConfig
         PlaybackDevices       = $playbackDevices
+        LichiiGameConfigs     = Read-LichiiGameConfig -LichiiConfigPath $LichiiConfigPath
     }
 }

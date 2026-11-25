@@ -48,6 +48,7 @@ Describe 'Set-LichiiGamepadLichiiConfig' {
         $script:Ini = Join-Path $TestDrive 'qt-config.ini'
         Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'fixtures\qt-config.ini') -Destination $Ini -Force
         Get-ChildItem -LiteralPath $TestDrive -Filter '*.bak' | Remove-Item
+        Remove-Item -LiteralPath (Join-Path $TestDrive 'custom') -Recurse -Force -ErrorAction SilentlyContinue
         Mock Get-Process -ModuleName LichiiGamepad { }
         Mock Get-PlaybackDeviceName -ModuleName LichiiGamepad { 'Lautsprecher (Realtek(R) Audio)'; 'CABLE Input (VB-Audio Virtual Cable)' }
     }
@@ -79,6 +80,15 @@ Describe 'Set-LichiiGamepadLichiiConfig' {
     It 'warns when no active playback device has that exact name' {
         Set-LichiiGamepadLichiiConfig -LichiiConfigPath $Ini -AudioDevice 'CABLE Input' -Confirm:$false -WarningVariable warnings -WarningAction SilentlyContinue
         "$warnings" | Should -Match ([regex]::Escape('CABLE Input (VB-Audio Virtual Cable)'))
+    }
+
+    It 'warns about games that keep their own output device and would not follow -AudioDevice' {
+        New-Item -ItemType Directory -Path (Join-Path $TestDrive 'custom') | Out-Null
+        Set-Content -LiteralPath (Join-Path $TestDrive 'custom\0100187003A36000.ini') `
+            -Value "[Audio]`r`noutput_device\use_global=false`r`noutput_device\default=false`r`noutput_device=Lautsprecher (Realtek(R) Audio)"
+        Set-LichiiGamepadLichiiConfig -LichiiConfigPath $Ini -AudioDevice 'CABLE Input (VB-Audio Virtual Cable)' -Confirm:$false `
+            -WarningVariable warnings -WarningAction SilentlyContinue
+        "$warnings" | Should -Match '0100187003A36000'
     }
 
     It 'refuses to write while Lichii is running, because Lichii overwrites the file on exit' {

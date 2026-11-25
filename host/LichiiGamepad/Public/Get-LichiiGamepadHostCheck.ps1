@@ -148,5 +148,19 @@
         else {
             New-HostCheck -Id 'audio-isolated' -Area Ton -Status Pass -Message "Lichii spielt auf ein eigenes Gerät: $device."
         }
+
+        # Lichii's game properties dialog marks the output device as per-game while it loads, as soon as the
+        # global device is not "auto" (configure_audio.cpp: SetOutputDevicesFromDeviceID runs after the
+        # updating_devices guard). Saving the dialog then pins that device for the game.
+        $overrides = @(Get-LichiiGameAudioOverride -GameConfigs $State.LichiiGameConfigs)
+        if ($overrides.Count -gt 0) {
+            $list = ($overrides | ForEach-Object { "$($_.TitleId): $($_.Device)" }) -join '; '
+            New-HostCheck -Id 'audio-game-override' -Area Ton -Status Warn `
+                -Message "Diese Spiele legen ihr Tongerät selbst fest und folgen der globalen Einstellung nicht: $list" `
+                -Fix $script:GameAudioOverrideFix
+        }
+        else {
+            New-HostCheck -Id 'audio-game-override' -Area Ton -Status Pass -Message 'Alle Spiele folgen dem globalen Tongerät.'
+        }
     }
 }

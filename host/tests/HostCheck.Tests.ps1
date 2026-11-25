@@ -26,6 +26,9 @@
                 Audio    = @{ 'output_device\default' = 'false'; output_device = 'CABLE Input (VB-Audio Virtual Cable)' }
             }
             PlaybackDevices       = @('Lautsprecher (Realtek(R) Audio)', 'CABLE Input (VB-Audio Virtual Cable)')
+            LichiiGameConfigs     = @{
+                '0100ABF008968000' = @{ Audio = @{ 'output_device\use_global' = 'true' } }
+            }
         }
         foreach ($key in $Override.Keys) { $state[$key] = $Override[$key] }
         [pscustomobject]$state
@@ -149,6 +152,33 @@ Describe 'Get-LichiiGamepadHostCheck' {
             $check = Get-Check (New-TestState @{ PlaybackDevices = $null }) 'audio-isolated'
             $check.Status | Should -Be 'Warn'
             $check.Message | Should -Match 'nicht prüfen'
+        }
+
+        It 'warns when a game keeps its own output device, because Lichii then ignores the global one for it' {
+            $state = New-TestState
+            $state.LichiiGameConfigs['0100187003A36000'] = @{
+                Audio = @{ 'output_device\use_global' = 'false'; 'output_device\default' = 'false'; output_device = 'CABLE Input (VB-Audio Virtual Cable)' }
+            }
+            $check = Get-Check $state 'audio-game-override'
+            $check.Area | Should -Be 'Ton'
+            $check.Status | Should -Be 'Warn'
+            $check.Message | Should -Match '0100187003A36000'
+            $check.Message | Should -Match ([regex]::Escape('CABLE Input (VB-Audio Virtual Cable)'))
+            $check.Fix | Should -Match 'Eigenschaften'
+        }
+
+        It 'passes when every game follows the global output device, also without an Audio section' {
+            $state = New-TestState
+            $state.LichiiGameConfigs['0400A3A01EE4C000'] = @{ Renderer = @{ 'precache_shaders\use_global' = 'false' } }
+            (Get-Check $state 'audio-game-override').Status | Should -Be 'Pass'
+        }
+
+        It 'names auto when a game pins the built-in default device' {
+            $state = New-TestState
+            $state.LichiiGameConfigs['0100187003A36000'] = @{
+                Audio = @{ 'output_device\use_global' = 'false'; 'output_device\default' = 'true'; output_device = 'CABLE Input (VB-Audio Virtual Cable)' }
+            }
+            (Get-Check $state 'audio-game-override').Message | Should -Match '0100187003A36000: auto'
         }
     }
 
