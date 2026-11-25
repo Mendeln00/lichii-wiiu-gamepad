@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Danke! Jeder Bericht hilft, gerade auch über Hardware, die **nicht** funktioniert.
-        Bitte keine Seriennummern, MAC-Adressen, WLAN-Schlüssel oder Keys posten.
+        Bitte keine Seriennummern, MAC-Adressen, WLAN-Schlüssel oder Keys posten, vor allem nicht `prod.keys` oder `title.keys`.
   - type: input
     id: dongle
     attributes:
