@@ -49,6 +49,7 @@ Describe 'Set-LichiiGamepadLichiiConfig' {
         Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'fixtures\qt-config.ini') -Destination $Ini -Force
         Get-ChildItem -LiteralPath $TestDrive -Filter '*.bak' | Remove-Item
         Mock Get-Process -ModuleName LichiiGamepad { }
+        Mock Get-PlaybackDeviceName -ModuleName LichiiGamepad { 'Lautsprecher (Realtek(R) Audio)'; 'CABLE Input (VB-Audio Virtual Cable)' }
     }
 
     It 'turns on DSU for the local bridge with Toffee''s touch range by default' {
@@ -60,6 +61,24 @@ Describe 'Set-LichiiGamepadLichiiConfig' {
         $controls['udp_input_servers\default'] | Should -Be 'false'
         $controls['touch_device'] | Should -Be 'min_x:0,min_y:0,max_x:1919,max_y:941'
         $controls['touch_device\default'] | Should -Be 'false'
+    }
+
+    It 'sends the game audio to its own device with -AudioDevice' {
+        Set-LichiiGamepadLichiiConfig -LichiiConfigPath $Ini -AudioDevice 'CABLE Input (VB-Audio Virtual Cable)' -Confirm:$false
+        $audio = (ConvertFrom-LichiiConfig -Text (Get-Content -LiteralPath $Ini -Raw))['Audio']
+        $audio['output_device'] | Should -Be 'CABLE Input (VB-Audio Virtual Cable)'
+        $audio['output_device\default'] | Should -Be 'false'
+    }
+
+    It 'leaves the audio output alone without -AudioDevice, so the game stays audible until the bridge records that device' {
+        Set-LichiiGamepadLichiiConfig -LichiiConfigPath $Ini -Confirm:$false
+        $audio = (ConvertFrom-LichiiConfig -Text (Get-Content -LiteralPath $Ini -Raw))['Audio']
+        $audio['output_device\default'] | Should -Be 'true'
+    }
+
+    It 'warns when no active playback device has that exact name' {
+        Set-LichiiGamepadLichiiConfig -LichiiConfigPath $Ini -AudioDevice 'CABLE Input' -Confirm:$false -WarningVariable warnings -WarningAction SilentlyContinue
+        "$warnings" | Should -Match ([regex]::Escape('CABLE Input (VB-Audio Virtual Cable)'))
     }
 
     It 'refuses to write while Lichii is running, because Lichii overwrites the file on exit' {
@@ -106,5 +125,17 @@ Describe 'Set-LichiiGamepadLichiiConfig' {
         $after = Get-LichiiGamepadHostState @stateArgs | Get-LichiiGamepadHostCheck | Where-Object Id -like 'lichii-dsu*'
         @($after).Count | Should -Be 2
         $after | Where-Object Status -ne 'Pass' | Should -BeNullOrEmpty
+    }
+
+    It 'turns the audio warning into a pass with -AudioDevice (acceptance of #15, Lichii side)' {
+        Mock Get-CimInstance -ModuleName LichiiGamepad { }
+        $stateArgs = @{ ApolloPath = (Join-Path $TestDrive 'no-apollo'); LichiiConfigPath = $Ini }
+        (Get-LichiiGamepadHostState @stateArgs | Get-LichiiGamepadHostCheck | Where-Object Id -eq 'audio-isolated').Status |
+            Should -Be 'Warn'
+
+        Set-LichiiGamepadLichiiConfig -LichiiConfigPath $Ini -AudioDevice 'CABLE Input (VB-Audio Virtual Cable)' -Confirm:$false
+
+        (Get-LichiiGamepadHostState @stateArgs | Get-LichiiGamepadHostCheck | Where-Object Id -eq 'audio-isolated').Status |
+            Should -Be 'Pass'
     }
 }
