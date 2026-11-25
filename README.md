@@ -64,6 +64,12 @@ Apollo auf Isolation einstellen (als Administrator, mit Backup, `-WhatIf` zeigt 
 Set-LichiiGamepadApolloConfig -RestartService
 ```
 
+DSU in Lichii einschalten (Lichii vorher beenden, mit Backup, `-WhatIf` geht auch hier). Der Standard passt zu Toffee: DSU‑Server `127.0.0.1:26760`, Touch im Bereich des DS4‑Touchpads. Für eine andere Brücke gibt man `-DsuServer` und `-TouchDevice` an:
+
+```powershell
+Set-LichiiGamepadLichiiConfig
+```
+
 ## Projektaufbau
 
 | Ordner | Inhalt |

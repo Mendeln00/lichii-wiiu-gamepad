@@ -122,9 +122,21 @@ Describe 'Get-LichiiGamepadHostCheck' {
             (Get-Check $state 'lichii-dsu-enabled').Status | Should -Be 'Warn'
         }
 
-        It 'warns when Lichii only polls localhost for DSU' {
+        It 'ignores a value that a Qt default marker overrides, as Lichii does' {
+            $state = New-TestState
+            $state.LichiiConfig['Controls']['enable_udp_controller\default'] = 'true'
+            (Get-Check $state 'lichii-dsu-enabled').Status | Should -Be 'Warn'
+        }
+
+        It 'passes when Lichii polls a bridge on this PC, as with Toffee' {
             $state = New-TestState
             $state.LichiiConfig['Controls']['udp_input_servers'] = '127.0.0.1:26760'
+            (Get-Check $state 'lichii-dsu-server').Status | Should -Be 'Pass'
+        }
+
+        It 'warns when Lichii has no DSU server' {
+            $state = New-TestState
+            $state.LichiiConfig['Controls']['udp_input_servers'] = ''
             (Get-Check $state 'lichii-dsu-server').Status | Should -Be 'Warn'
         }
 

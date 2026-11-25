@@ -106,22 +106,23 @@
             return
         }
 
-        if ((Get-ConfigValue -Table $controls -Key 'enable_udp_controller' -Default 'false') -eq 'true') {
+        if ((Get-LichiiSetting -Section $controls -Key 'enable_udp_controller' -Default 'false') -eq 'true') {
             New-HostCheck -Id 'lichii-dsu-enabled' -Area Eingabe -Status Pass -Message 'UDP-Controller (DSU) sind in Lichii aktiv.'
         }
         else {
             New-HostCheck -Id 'lichii-dsu-enabled' -Area Eingabe -Status Warn -Message 'UDP-Controller (DSU) sind in Lichii aus. Gyro und Touch vom GamePad kommen nicht an.' `
-                -Fix 'Lichii > Emulation > Konfigurieren > Steuerung > Erweitert: "UDP-Controller aktivieren" einschalten.'
+                -Fix 'Set-LichiiGamepadLichiiConfig ausführen (Lichii vorher beenden).'
         }
 
-        $servers = [string](Get-ConfigValue -Table $controls -Key 'udp_input_servers' -Default '')
-        $remote = @($servers -split ',' | Where-Object { $_ -and $_ -notmatch '^(127\.0\.0\.1|localhost)(:|$)' })
-        if ($remote.Count -gt 0) {
-            New-HostCheck -Id 'lichii-dsu-server' -Area Eingabe -Status Pass -Message "Lichii fragt DSU bei $($remote -join ', ') ab."
+        $servers = Get-LichiiSetting -Section $controls -Key 'udp_input_servers' -Default '127.0.0.1:26760'
+        # A bridge on this PC (Toffee) serves DSU on 127.0.0.1, so a local server is fine.
+        $configured = @($servers -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+        if ($configured.Count -gt 0) {
+            New-HostCheck -Id 'lichii-dsu-server' -Area Eingabe -Status Pass -Message "Lichii fragt DSU bei $($configured -join ', ') ab."
         }
         else {
-            New-HostCheck -Id 'lichii-dsu-server' -Area Eingabe -Status Warn -Message 'Lichii fragt DSU nur auf diesem PC (127.0.0.1) ab, nicht bei der Konsole.' `
-                -Fix 'Unter Steuerung > Bewegung/Touch einen DSU-Server "<IP der Wii U>:26760" hinzufügen.'
+            New-HostCheck -Id 'lichii-dsu-server' -Area Eingabe -Status Warn -Message 'In Lichii ist kein DSU-Server eingetragen.' `
+                -Fix 'Set-LichiiGamepadLichiiConfig ausführen (Toffee: 127.0.0.1:26760) oder mit -DsuServer die Adresse der Brücke angeben.'
         }
     }
 }
