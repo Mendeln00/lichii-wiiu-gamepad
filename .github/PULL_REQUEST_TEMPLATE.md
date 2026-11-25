@@ -9,6 +9,7 @@ Closes #
 - [ ] `host/tests/Invoke-Tests.ps1` ist grün
 - [ ] Auf echter Hardware getestet (GamePad, Dongle, Konsole), oder hier begründen, warum nicht nötig
 - [ ] Ich verstehe die Änderung und habe sie selbst geprüft, egal ob von Hand oder mit KI geschrieben
+- [ ] Keine Spiele, Keys (`prod.keys`, `title.keys`), Firmware oder persönlichen Pfade im Diff, in Tests, Logs oder Screenshots
 
 ## Risiko
 

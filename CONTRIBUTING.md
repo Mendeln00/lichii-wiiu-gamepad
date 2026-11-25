@@ -74,7 +74,7 @@ Install-Module Pester, PSScriptAnalyzer -Scope CurrentUser -Force -SkipPublisher
 
 ## Rechtliches
 
-- Lade keine Spiele, Keys, Firmware oder Dumps hoch, auch nicht in Issues oder Logs.
+- Lade keine Spiele, Keys, Firmware oder Dumps hoch, auch nicht in Issues, Logs oder Screenshots. Das gilt besonders für `prod.keys` und `title.keys`: Sie stammen aus der eigenen Switch und sind privat. Ist doch etwas davon gepostet, lösch den Beitrag oder bitte die Maintainer, ihn samt Bearbeitungsverlauf zu entfernen. Bearbeiten allein reicht nicht, GitHub hebt alte Fassungen auf.
 - Mit deinem Beitrag stimmst du zu, dass er unter [GPL‑3.0‑or‑later](LICENSE) steht.
 - Fremden Code übernehmen wir nur, wenn seine Lizenz zu GPL‑3.0‑or‑later passt (z. B. MIT, BSD, Apache‑2.0, GPL‑2.0‑or‑later). Hat ein Projekt keine Lizenz, fragen wir zuerst die Autorin oder den Autor, ob sie eine ergänzen.
 

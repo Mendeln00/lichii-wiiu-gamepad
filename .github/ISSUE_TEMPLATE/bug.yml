@@ -2,6 +2,11 @@ name: Fehler
 description: Etwas funktioniert nicht wie erwartet
 labels: [bug, needs-triage]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        **Keine Keys anhängen.** `prod.keys` und `title.keys` stammen aus deiner eigenen Switch und sind privat. Auch keine Spiele, Dumps oder den `keys`-Ordner von Lichii, und keine Logs oder Screenshots, auf denen Schlüssel zu sehen sind.
+        Ist doch etwas davon gepostet: Lösch den Beitrag oder bitte die Maintainer, ihn samt Bearbeitungsverlauf zu entfernen. Bearbeiten allein reicht nicht, GitHub hebt alte Fassungen auf.
   - type: textarea
     id: what
     attributes:
@@ -21,3 +26,10 @@ body:
     id: versions
     attributes:
       label: Versionen (Lichii-Build, Apollo, Brücke oder Client, WLAN-Dongle)
+  - type: checkboxes
+    id: private-data
+    attributes:
+      label: Private Daten
+      options:
+        - label: Ich habe keine `prod.keys`, keine `title.keys`, keinen `keys`-Ordner, keine Spiele und keine Dumps angehängt.
+          required: true
