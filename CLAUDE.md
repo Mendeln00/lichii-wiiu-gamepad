@@ -1,11 +1,11 @@
 # CLAUDE.md
 
-Lichii (Switch‑Emulator) über das Wii U GamePad spielen, isoliert vom restlichen PC. Überblick: `README.md`, `docs/architecture.md`, `docs/roadmap.md`.
+Lichii (Switch‑Emulator) auf dem Wii U GamePad spielen, isoliert vom restlichen PC. Ziel ist der **Direktmodus**: Die Brücke koppelt und bedient das GamePad ganz ohne Wii U. Das Relay über die Konsole ist nur Plan B (ADR 0005). Überblick: `README.md`, `docs/architecture.md`, `docs/roadmap.md`.
 
 ## Konventionen
 
 - Doku, Issues und Commit‑Beschreibungen auf **Deutsch**. Code, Bezeichner und Code‑Kommentare auf **Englisch**. PRs an Upstream‑Projekte auf Englisch.
-- Begriffe aus `GLOSSARY.md` verwenden (GamePad, Konsole, Host, Client, Spielanzeige, Spielton, Eingabekanal, DSU, Isolation, Spielprofil).
+- Begriffe aus `GLOSSARY.md` verwenden.
 - Commits nach [Conventional Commits](https://www.conventionalcommits.org/) (`feat(host): …`, `docs: …`). Jede Änderung läuft über Branch und PR, nicht direkt auf `main`.
 - Host‑Modul (`host/LichiiGamepad`): Windows PowerShell 5.1 kompatibel. Logik als reine Funktionen mit Pester‑5‑Tests (`host/tests`). Dateizugriffe in dünnen Wrappern.
 - Tests: `pwsh -NoProfile -File host/tests/Invoke-Tests.ps1` (oder `powershell`). Lint: PSScriptAnalyzer mit `host/PSScriptAnalyzerSettings.psd1`.
@@ -18,7 +18,7 @@ Arbeitsablauf (welcher Skill bei welchem Schritt, von Triage bis PR): Tabelle �
 
 ### Issue tracker
 
-Issues liegen in den GitHub Issues von `Mendeln00/lichii-wiiu-gamepad` (über die `gh` CLI), gegliedert in Milestones M0–M6. See `docs/agents/issue-tracker.md`.
+Issues liegen in den GitHub Issues von `Mendeln00/lichii-wiiu-gamepad` (über die `gh` CLI), gegliedert in Milestones M0–M6 und „Plan B“. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

@@ -1,6 +1,6 @@
 # 0001: Konsole als Relay statt Direktmodus als Standard
 
-- Status: angenommen
+- Status: abgelöst durch [ADR 0005](0005-direktmodus-als-ziel.md)
 - Datum: 2026-11-25
 
 ## Kontext

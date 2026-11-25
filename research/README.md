@@ -1,5 +1,5 @@
 # Recherche
 
-Notizen und Spikes, die (noch) nicht in Code münden. Jede Datei nennt ihre Quellen.
+Notizen und Spikes, die (noch) nicht in Code münden. Jede Datei nennt ihre Quellen. Neue Recherchen entstehen mit `/research`.
 
-- `direct-mode.md`: Direktmodus ohne Konsole (Meilenstein M5)
+- `direct-mode.md`: Direktmodus ohne Konsole. Kopplung, Protokoll, Projekte und Lizenzen, Hardware, Plattform (Meilensteine M2 bis M4)

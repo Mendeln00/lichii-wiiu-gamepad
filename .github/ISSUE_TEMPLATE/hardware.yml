@@ -10,8 +10,8 @@ body:
   - type: input
     id: dongle
     attributes:
-      label: WLAN-Dongle (Hersteller und Modell)
-      placeholder: z. B. Panda PAU0B
+      label: Funk-Hardware (Hersteller und Modell)
+      placeholder: z. B. Waveshare ESP32-C5-Zero oder TP-Link Nano AC600
     validations:
       required: true
   - type: input
@@ -25,6 +25,7 @@ body:
     attributes:
       label: Worauf läuft die Brücke zum GamePad?
       options:
+        - ESP32-C5 am Windows-Host (Toffee)
         - WSL2 unter Windows (usbipd)
         - Raspberry Pi
         - Anderer Linux-Rechner
