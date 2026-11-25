@@ -1,1 +1,8 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
+contact_links:
+  - name: Frage oder Idee
+    url: https://github.com/Mendeln00/lichii-wiiu-gamepad/discussions
+    about: Fragen, Ideen und Erfahrungen gehören in die Discussions.
+  - name: Sicherheitslücke melden
+    url: https://github.com/Mendeln00/lichii-wiiu-gamepad/security/advisories/new
+    about: Bitte vertraulich melden, nicht als öffentliches Issue.

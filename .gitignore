@@ -17,7 +17,6 @@ build/
 *.wux
 local/
 .scratch/
-*.bak
 
 # Editors / OS
 .vscode/*

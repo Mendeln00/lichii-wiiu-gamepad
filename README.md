@@ -1,5 +1,12 @@
 # lichii-wiiu-gamepad
 
+![Code: 100 % KI](https://img.shields.io/badge/Code-100%25%20KI-8A2BE2) [![CI](https://github.com/Mendeln00/lichii-wiiu-gamepad/actions/workflows/ci.yml/badge.svg)](https://github.com/Mendeln00/lichii-wiiu-gamepad/actions/workflows/ci.yml) [![Lizenz: GPL-3.0-or-later](https://img.shields.io/badge/Lizenz-GPL--3.0--or--later-blue)](LICENSE)
+
+> [!IMPORTANT]
+> **Dieses Projekt ist zu 100 % KI‑Code.** Code und Doku schreibt [Claude Code](https://claude.com/claude-code). Der Maintainer gibt die Richtung vor, prüft und testet auf echter Hardware. Wer KI‑Code ablehnt, ist hier vermutlich nicht richtig, und das ist okay. Hilfe ist trotzdem immer willkommen: [Mitmachen](CONTRIBUTING.md).
+>
+> _English:_ 100 % of the code is AI-generated. If that's not for you, no hard feelings. Help is always welcome.
+
 Den Switch‑Emulator [Lichii](https://github.com/zortos293/Lichii) mit dem **Wii U GamePad** spielen: Bild und Ton laufen auf das GamePad, Tasten, Sticks, Gyro und Touch gehen zurück an den PC. Lichii läuft dabei **isoliert**. Maus, Tastatur, Hauptbildschirm und Ton des PCs bleiben frei, du kannst also nebenher normal am PC arbeiten.
 
 > _English:_ Play the Lichii emulator on a Wii U GamePad (video + audio to the GamePad, buttons/sticks/gyro/touch back to the PC) while the PC stays usable for other work.
@@ -59,6 +66,10 @@ Set-LichiiGamepadApolloConfig -RestartService
 | `wiiu/` | Wii‑U‑Client (folgt als Fork von moonlight‑wiiu, siehe Roadmap) |
 | `research/` | Recherchen und Spikes, z. B. Direktverbindung ohne Wii U |
 | `docs/` | Architektur, ADRs, Roadmap, Agent‑Konventionen |
+
+## Mitmachen
+
+Am meisten helfen **Hardware‑Berichte**: Welcher WLAN‑Dongle läuft mit dem GamePad, welcher nicht? Dazu kommen Wissen über das GamePad‑Protokoll, Tests, Reviews und Code. Fragen und Ideen gehören in die [Discussions](https://github.com/Mendeln00/lichii-wiiu-gamepad/discussions). Wie alles abläuft, steht in [CONTRIBUTING.md](CONTRIBUTING.md). Deutsch und Englisch sind beide willkommen.
 
 ## Verwandte Projekte
 
