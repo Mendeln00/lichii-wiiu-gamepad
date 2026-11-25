@@ -1,6 +1,6 @@
 # 0002: Moonlight‑Protokoll mit Apollo als Host
 
-- Status: angenommen
+- Status: angenommen. Der Client ist seit [ADR 0005](0005-direktmodus-als-ziel.md) die Brücke, der Fork von moonlight‑wiiu nur noch Plan B.
 - Datum: 2026-11-25
 
 ## Kontext

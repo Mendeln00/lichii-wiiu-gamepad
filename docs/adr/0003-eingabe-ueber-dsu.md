@@ -1,6 +1,6 @@
 # 0003: Eingabekanal über DSU (Cemuhook), ViGEm nur als Rückfall
 
-- Status: angenommen
+- Status: angenommen. Seit [ADR 0005](0005-direktmodus-als-ziel.md) stellt die Brücke den DSU‑Server bereit.
 - Datum: 2026-11-25
 
 ## Kontext
@@ -9,7 +9,7 @@ moonlight‑wiiu schickt GamePad‑Tasten über das Moonlight‑Protokoll an Apo
 
 ## Entscheidung
 
-Der Client bekommt einen eingebauten **DSU‑Server**. Lichii verbindet sich per `udp_input_servers=<Konsole‑IP>:26760`. Die Moonlight‑Eingabe lässt sich im Client abschalten. Der virtuelle Xbox‑Controller bleibt als Rückfall (M1), bis DSU fertig ist.
+Der Client bekommt einen eingebauten **DSU‑Server**. Lichii verbindet sich per `udp_input_servers=<Client‑IP>:26760`. Die Moonlight‑Eingabe lässt sich im Client abschalten. Der virtuelle Xbox‑Controller bleibt als Rückfall (M1), bis DSU fertig ist.
 
 ## Folgen
 

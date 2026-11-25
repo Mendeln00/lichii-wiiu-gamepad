@@ -20,4 +20,4 @@ body:
   - type: input
     id: versions
     attributes:
-      label: Versionen (Lichii-Build, Apollo, Client, Aroma)
+      label: Versionen (Lichii-Build, Apollo, Brücke oder Client, WLAN-Dongle)

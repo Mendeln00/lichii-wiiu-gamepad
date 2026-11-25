@@ -7,9 +7,9 @@
 >
 > _English:_ 100 % of the code is AI-generated. If that's not for you, no hard feelings. Help is always welcome.
 
-Den Switch‑Emulator [Lichii](https://github.com/zortos293/Lichii) mit dem **Wii U GamePad** spielen: Bild und Ton laufen auf das GamePad, Tasten, Sticks, Gyro und Touch gehen zurück an den PC. Lichii läuft dabei **isoliert**. Maus, Tastatur, Hauptbildschirm und Ton des PCs bleiben frei, du kannst also nebenher normal am PC arbeiten.
+Den Switch‑Emulator [Lichii](https://github.com/zortos293/Lichii) mit dem **Wii U GamePad** spielen, **ganz ohne Wii U**: Bild und Ton laufen auf das GamePad, Tasten, Sticks, Gyro und Touch gehen zurück an den PC. Eine **Brücke** gibt sich dem GamePad gegenüber als Konsole aus: ein kleines Funkmodul am USB‑Port oder ein Linux‑Rechner mit WLAN‑Dongle. Lichii läuft dabei **isoliert**. Maus, Tastatur, Hauptbildschirm und Ton des PCs bleiben frei, du kannst also nebenher normal am PC arbeiten.
 
-> _English:_ Play the Lichii emulator on a Wii U GamePad (video + audio to the GamePad, buttons/sticks/gyro/touch back to the PC) while the PC stays usable for other work.
+> _English:_ Play the Lichii emulator on a Wii U GamePad without a Wii U: a bridge (a small USB radio board or Linux with a Wi‑Fi dongle) acts as the console. Video and audio go to the GamePad, buttons/sticks/gyro/touch go back to the PC, and the PC stays usable for other work.
 
 ## Status
 
@@ -20,20 +20,26 @@ Den Switch‑Emulator [Lichii](https://github.com/zortos293/Lichii) mit dem **Wi
 ```mermaid
 flowchart LR
   subgraph PC["Windows‑PC (Host)"]
-    L[Lichii] -- Bild --> VD[Virtuelles Display<br/>SudoVDA]
-    L -- Ton --> AS[Eigenes Audio‑Gerät]
-    VD --> A[Apollo<br/>Sunshine‑Fork]
+    L[Lichii] -- Bild --> VD[Spielanzeige<br/>SudoVDA]
+    L -- Ton --> AS[Spielton<br/>eigenes Audiogerät]
+    VD --> A[Apollo]
     AS --> A
   end
-  subgraph WiiU["Wii U (Aroma)"]
-    C[Wii‑U‑Client<br/>Fork von moonlight‑wiiu]
+  subgraph BR["Brücke"]
+    M[Moonlight‑Empfang] --> E[Umkodieren<br/>für das GamePad]
+    E --> D[GamePad‑Protokoll<br/>als Access Point]
+    D --> S[DSU‑Server]
   end
   GP[(Wii U GamePad)]
-  A -- "H.264 + Opus (Moonlight‑Protokoll)" --> C
-  C -- Bild + Ton --> GP
-  GP -- "Tasten, Sticks, Gyro, Touch" --> C
-  C -- "DSU / Cemuhook (UDP 26760)" --> L
+  A -- "Stream (Moonlight‑Protokoll)" --> M
+  D -- "Bild + Ton (WLAN 5 GHz)" --> GP
+  GP -- "Tasten, Sticks, Gyro, Touch" --> D
+  S -- "DSU (UDP 26760)" --> L
 ```
+
+Das Diagramm zeigt den Linux‑Weg. Im Toffee‑Weg liest die Brücke die Spielanzeige direkt auf dem Host, ohne Apollo ([ADR 0005](docs/adr/0005-direktmodus-als-ziel.md)).
+
+Die Wii U braucht es nur für den Plan B, das **Relay**: Dann empfängt die Konsole den Stream und gibt ihn weiter ([wiiu/](wiiu/)).
 
 Mehr dazu in [docs/architecture.md](docs/architecture.md) und den Entscheidungen unter [docs/adr/](docs/adr/).
 
@@ -41,9 +47,9 @@ Mehr dazu in [docs/architecture.md](docs/architecture.md) und den Entscheidungen
 
 | Seite | Was |
 | --- | --- |
-| PC | Windows 10/11, [Apollo](https://github.com/ClassicOldSong/Apollo) mit SudoVDA, [ViGEmBus](https://github.com/nefarius/ViGEmBus), Lichii |
-| Wii U | Homebrew mit [Aroma](https://aroma.foryour.cafe/), SD‑Karte, möglichst LAN‑Adapter |
-| Netz | PC und Wii U im selben Netz, am besten per Kabel |
+| PC | Windows 10/11, [Apollo](https://github.com/ClassicOldSong/Apollo) mit SudoVDA, Lichii. Optional [ViGEmBus](https://github.com/nefarius/ViGEmBus) als Rückfall für die Eingabe |
+| Brücke | Wird gerade per Spike entschieden: ein ESP32‑C5‑Board am USB‑Port ([Toffee](https://github.com/Gavwalsh15/toffee_wiiu)) oder Linux mit USB‑WLAN‑Dongle (RTL8811AU). Details in [research/direct-mode.md](research/direct-mode.md) und [ADR 0005](docs/adr/0005-direktmodus-als-ziel.md) |
+| Wii U | Nicht nötig. Nur für den Plan B (Relay) |
 
 Prüfen, ob der PC bereit ist:
 
@@ -63,8 +69,9 @@ Set-LichiiGamepadApolloConfig -RestartService
 | Ordner | Inhalt |
 | --- | --- |
 | `host/` | PowerShell‑Modul für den Windows‑PC: Prüfung, Einrichtung und Start |
-| `wiiu/` | Wii‑U‑Client (folgt als Fork von moonlight‑wiiu, siehe Roadmap) |
-| `research/` | Recherchen und Spikes, z. B. Direktverbindung ohne Wii U |
+| `bridge/` | Die Brücke: Einrichtung, Konfiguration und Verweise auf unsere Forks |
+| `wiiu/` | Plan B: Wii‑U‑Client als Fork von moonlight‑wiiu |
+| `research/` | Recherchen und Spikes, z. B. zum GamePad‑Protokoll und zu Dongles |
 | `docs/` | Architektur, ADRs, Roadmap, Agent‑Konventionen |
 
 ## Mitmachen

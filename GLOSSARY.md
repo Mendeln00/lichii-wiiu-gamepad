@@ -1,19 +1,69 @@
 # Glossar
 
-Gemeinsame Sprache für dieses Projekt. Code, Issues und Doku verwenden diese Begriffe.
+Gemeinsame Sprache dieses Projekts: Lichii auf dem Wii U GamePad spielen, während der PC frei bleibt. Code, Issues und Doku verwenden diese Begriffe.
 
-| Begriff | Bedeutung | Nicht verwenden |
-| --- | --- | --- |
-| **GamePad** | Der Wii‑U‑Controller mit Bildschirm (intern „DRC“). | Tablet, Controller (mehrdeutig) |
-| **Konsole** | Die Wii U selbst. Sie läuft mit Aroma und dient als **Relay**. | WiiU‑Box |
-| **Host** | Der Windows‑PC, auf dem Lichii und Apollo laufen. | Server (mehrdeutig, siehe DSU) |
-| **Relay** | Betriebsart, in der die Konsole den Stream vom Host empfängt und ans GamePad weitergibt. Standard‑Betriebsart. | Proxy |
-| **Direktmodus** | Spätere Betriebsart ohne Konsole: Der Host spricht über einen WLAN‑Dongle direkt mit dem GamePad (libdrc‑Weg). | — |
-| **Client** | Unsere Wii‑U‑App (Fork von moonlight‑wiiu). Sie zeigt den Stream an und liest das GamePad aus. | Homebrew (zu allgemein) |
-| **Stream** | Bild (H.264) und Ton (Opus) vom Host zum Client über das Moonlight‑Protokoll. | — |
-| **Spielanzeige** | Das virtuelle Display (SudoVDA), auf dem nur Lichii läuft. Es wird gestreamt. | Zweiter Monitor |
-| **Spielton** | Der Audio‑Pfad, der nur Lichiis Ton zum Stream führt. | — |
-| **Eingabekanal** | Der Weg vom GamePad zu Lichii. Bevorzugt **DSU**, als Rückfall ein virtueller Xbox‑Controller (ViGEm). | — |
-| **DSU** | Cemuhook‑UDP‑Protokoll (Port 26760). Der Client ist DSU‑**Server**, Lichii ist DSU‑**Client**. | UDP‑Controller (nur in Lichii‑UI) |
-| **Isolation** | Lichii bekommt Bild, Ton und Eingabe über eigene Kanäle. Maus, Tastatur, Hauptbildschirm und Ton des Hosts bleiben unberührt. | Headless |
-| **Spielprofil** | Ein App‑Eintrag in Apollo, der Lichii mit einem bestimmten Spiel startet. | — |
+## Geräte
+
+**GamePad**:
+Der Wii‑U‑Controller mit eigenem Bildschirm, Tasten, Sticks, Gyro und Touch.
+_Avoid_: Tablet, Controller, DRC (nur im Protokoll‑Code)
+
+**Host**:
+Der Windows‑PC, auf dem Lichii und Apollo laufen.
+_Avoid_: Server
+
+**Brücke**:
+Das Gerät mit Software, das sich dem GamePad gegenüber als Konsole ausgibt.
+_Avoid_: Bridge, Relay, Dongle
+
+**Konsole**:
+Die Wii U selbst. Sie wird nur im Relay gebraucht.
+_Avoid_: WiiU‑Box
+
+**Client**:
+Die Gegenstelle von Apollo, die den Stream empfängt: im Direktmodus die Brücke, im Relay die Wii‑U‑App.
+_Avoid_: Homebrew
+
+## Betriebsarten
+
+**Direktmodus**:
+Die Brücke spricht direkt mit dem GamePad, ganz ohne Konsole. Das ist das Ziel des Projekts.
+_Avoid_: Standalone
+
+**Relay**:
+Plan B: Die Konsole empfängt den Stream vom Host und gibt ihn an das GamePad weiter.
+_Avoid_: Proxy
+
+**Kopplung**:
+Das einmalige Bekanntmachen von GamePad und Brücke (oder Konsole). Danach verbindet sich das GamePad von selbst.
+_Avoid_: Sync, Pairing ohne Zusatz
+
+**Moonlight‑Pairing**:
+Das einmalige Vertrauen zwischen Client und Apollo per PIN.
+_Avoid_: Kopplung
+
+## Kanäle
+
+**Stream**:
+Bild und Ton vom Host zum Client.
+
+**Spielanzeige**:
+Die virtuelle Anzeige auf dem Host, auf der nur Lichii läuft und die gestreamt wird.
+_Avoid_: Zweiter Monitor
+
+**Spielton**:
+Nur Lichiis Ton, getrennt vom übrigen Ton des Hosts.
+
+**Eingabekanal**:
+Der Weg der Eingaben vom GamePad zu Lichii.
+
+**DSU**:
+Das Cemuhook‑Protokoll, über das Lichii Tasten, Sticks, Gyro und Touch abfragt. Der Client ist DSU‑Server, Lichii ist DSU‑Client.
+_Avoid_: UDP‑Controller (nur der Name in Lichiis Oberfläche)
+
+**Isolation**:
+Lichii bekommt Bild, Ton und Eingabe über eigene Kanäle. Maus, Tastatur, Hauptbildschirm und Ton des Hosts bleiben unberührt.
+_Avoid_: Headless
+
+**Spielprofil**:
+Ein App‑Eintrag in Apollo, der Lichii mit einem bestimmten Spiel startet.
