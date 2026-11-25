@@ -12,7 +12,9 @@
         'Get-LichiiGamepadHostCheck'
         'Get-LichiiGamepadHostState'
         'Merge-ApolloConfig'
+        'Merge-LichiiConfig'
         'Set-LichiiGamepadApolloConfig'
+        'Set-LichiiGamepadLichiiConfig'
         'Test-LichiiGamepadHost'
     )
     CmdletsToExport   = @()
