@@ -42,7 +42,13 @@ Prüfen, ob der PC bereit ist:
 
 ```powershell
 Import-Module .\host\LichiiGamepad\LichiiGamepad.psd1
-Test-LichiiGamepadHost
+Test-LichiiGamepadHost -Detailed
+```
+
+Apollo auf Isolation einstellen (als Administrator, mit Backup, `-WhatIf` zeigt vorher, was passiert):
+
+```powershell
+Set-LichiiGamepadApolloConfig -RestartService
 ```
 
 ## Projektaufbau
