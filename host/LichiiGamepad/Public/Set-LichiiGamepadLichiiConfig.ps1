@@ -65,6 +65,14 @@
         }
     }
 
+    if ($AudioDevice) {
+        $overrides = @(Get-LichiiGameAudioOverride -GameConfigs (Read-LichiiGameConfig -LichiiConfigPath $configFile))
+        if ($overrides.Count -gt 0) {
+            $list = ($overrides | ForEach-Object { "$($_.TitleId): $($_.Device)" }) -join '; '
+            Write-Warning "Diese Spiele legen ihr Tongerät selbst fest und folgen `"$AudioDevice`" nicht: $list. $script:GameAudioOverrideFix"
+        }
+    }
+
     $before = [System.IO.File]::ReadAllText($configFile)
     $after = Merge-LichiiConfig -Text $before -Section 'Controls' -Setting $dsu
     if ($AudioDevice) {

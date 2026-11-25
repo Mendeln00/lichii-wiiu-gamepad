@@ -76,6 +76,8 @@ Den Spielton auf ein eigenes Gerät legen, etwa [VB‑CABLE](https://vb-audio.co
 Set-LichiiGamepadLichiiConfig -AudioDevice 'CABLE Input (VB-Audio Virtual Cable)'
 ```
 
+Ein Spiel, dessen Eigenschaften man in Lichii öffnet und mit OK schließt, behält danach oft sein eigenes Tongerät und folgt der Einstellung nicht mehr. `Test-LichiiGamepadHost` nennt solche Spiele und sagt, wie man sie zurückstellt.
+
 ## Projektaufbau
 
 | Ordner | Inhalt |
