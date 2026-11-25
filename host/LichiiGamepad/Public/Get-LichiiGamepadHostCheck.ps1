@@ -48,36 +48,42 @@
         }
 
         # --- Bild: Isolation der Spielanzeige --------------------------------
+        # The target values come from the same place Set-LichiiGamepadApolloConfig writes them from.
+        $target = Get-ApolloIsolationSetting
+        $apolloFix = 'Set-LichiiGamepadApolloConfig -RestartService als Administrator ausführen (setzt {0} = {1}).'
+
         $ddOption = Get-ConfigValue -Table $apollo -Key 'dd_configuration_option' -Default 'disabled'
-        if ($ddOption -in @('ensure_primary', 'ensure_only_display')) {
+        # Apollo matches the option exactly and treats any other value as disabled.
+        if ($ddOption -cin @('ensure_primary', 'ensure_only_display')) {
             New-HostCheck -Id 'display-not-primary' -Area Bild -Status Warn `
                 -Message "Apollo macht die Spielanzeige zur Hauptanzeige (dd_configuration_option = $ddOption). Fenster und Taskleiste springen dann vom PC-Bildschirm weg." `
-                -Fix 'Apollo-Weboberfläche > Audio/Video > Display Device: "Activate the display automatically" (dd_configuration_option = ensure_active).'
+                -Fix ($apolloFix -f 'dd_configuration_option', $target['dd_configuration_option'])
         }
         else {
             New-HostCheck -Id 'display-not-primary' -Area Bild -Status Pass -Message 'Die Spielanzeige wird nicht zur Hauptanzeige.'
         }
 
-        $isolated = Get-ConfigValue -Table $apollo -Key 'isolated_virtual_display_option' -Default 'disabled'
-        if ($isolated -in @('enabled', 'true', '1')) {
+        # Apollo's defaults: no isolated display, mouse and keyboard input on.
+        $isolated = ConvertTo-ApolloBoolean -Value (Get-ConfigValue -Table $apollo -Key 'isolated_virtual_display_option') -Default $false
+        if ($isolated -eq (ConvertTo-ApolloBoolean -Value $target['isolated_virtual_display_option'] -Default $false)) {
             New-HostCheck -Id 'display-isolated' -Area Bild -Status Pass -Message 'Die Spielanzeige ist isoliert (die Maus gerät nicht versehentlich hinüber).'
         }
         else {
             New-HostCheck -Id 'display-isolated' -Area Bild -Status Warn -Message 'Die Spielanzeige ist nicht isoliert. Die Maus kann vom PC-Bildschirm auf sie wandern.' `
-                -Fix 'Apollo-Weboberfläche > Audio/Video: "Move the Virtual Display to the bottom right-most corner" aktivieren (isolated_virtual_display_option = enabled).'
+                -Fix ($apolloFix -f 'isolated_virtual_display_option', $target['isolated_virtual_display_option'])
         }
 
         # --- Eingabe: keine globalen Eingaben über Apollo ----------------------
         foreach ($device in @('mouse', 'keyboard')) {
-            $value = Get-ConfigValue -Table $apollo -Key $device -Default 'enabled'
+            $accepts = ConvertTo-ApolloBoolean -Value (Get-ConfigValue -Table $apollo -Key $device) -Default $true
             $label = @{ mouse = 'Maus'; keyboard = 'Tastatur' }[$device]
-            if ($value -eq 'disabled') {
+            if ($accepts -eq (ConvertTo-ApolloBoolean -Value $target[$device] -Default $true)) {
                 New-HostCheck -Id "apollo-$device-disabled" -Area Eingabe -Status Pass -Message "Apollo nimmt keine $label-Eingaben vom Client an."
             }
             else {
                 New-HostCheck -Id "apollo-$device-disabled" -Area Eingabe -Status Warn `
                     -Message "Apollo nimmt $label-Eingaben vom Client an. Touch oder Tasten können dann den PC steuern." `
-                    -Fix "Apollo-Weboberfläche > Input: $label deaktivieren ($device = disabled)."
+                    -Fix ($apolloFix -f $device, $target[$device])
             }
         }
 

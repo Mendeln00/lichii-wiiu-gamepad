@@ -4,7 +4,8 @@
         Applies settings to the text of Apollo's sunshine.conf and returns the new text.
     .DESCRIPTION
         Pure function. Existing "key = value" lines are updated in place, keeping order,
-        comments and line endings. Keys that are missing are appended at the end.
+        comments and line endings. A comment behind a changed value moves to its own line above.
+        Keys that are missing are appended at the end.
     .EXAMPLE
         Merge-ApolloConfig -Text $conf -Setting @{ mouse = 'disabled' }
     #>
@@ -27,19 +28,16 @@
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i].TrimEnd([char]13)
         $lineEnding = $lines[$i].Substring($line.Length)
-        if ($line.TrimStart().StartsWith('#')) { continue }
-        $separator = $line.IndexOf('=')
-        if ($separator -lt 1) { continue }
-        $key = $line.Substring(0, $separator).Trim()
+        $entry = Split-ApolloConfigLine -Line $line
         # Apollo reads keys case-sensitively, the hashtable would not.
-        if ($keys -ccontains $key) {
-            # Apollo treats everything from '#' on as a comment, so keep it.
-            $comment = ''
-            $hash = $line.IndexOf('#', $separator)
-            if ($hash -ge 0) { $comment = ' ' + $line.Substring($hash) }
-            $lines[$i] = "$key = $($Setting[$key])$comment$lineEnding"
-            $found[$key] = $true
-        }
+        if ($null -eq $entry -or $keys -cnotcontains $entry.Key) { continue }
+        $key = $entry.Key
+        $newLine = "$key = $($Setting[$key])$lineEnding"
+        # Apollo keeps the blank before an inline '#' in the value ("enabled " is not true for it),
+        # so the comment moves to its own line above.
+        if ($entry.Comment -ne '') { $newLine = "$($entry.Comment)$lineEnding`n$newLine" }
+        $lines[$i] = $newLine
+        $found[$key] = $true
     }
 
     $missing = @($keys | Where-Object { -not $found.ContainsKey($_) } | Sort-Object)

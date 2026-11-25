@@ -93,6 +93,25 @@ Describe 'Get-LichiiGamepadHostCheck' {
             $state.ApolloConfig.Remove('isolated_virtual_display_option')
             (Get-Check $state 'display-isolated').Status | Should -Be 'Warn'
         }
+
+        It 'passes for <Value>, which Apollo reads as true' -ForEach @(
+            @{ Value = 'enabled' }, @{ Value = 'true' }, @{ Value = 'on' }, @{ Value = 'yes' }, @{ Value = '1' }
+        ) {
+            $state = New-TestState
+            $state.ApolloConfig['isolated_virtual_display_option'] = $Value
+            (Get-Check $state 'display-isolated').Status | Should -Be 'Pass'
+        }
+
+        It 'warns when a comment follows the value, because Apollo then reads "enabled " as false' {
+            $state = New-TestState @{ ApolloConfig = ConvertFrom-ApolloConfig -Text "isolated_virtual_display_option = enabled # by hand`n" }
+            (Get-Check $state 'display-isolated').Status | Should -Be 'Warn'
+        }
+
+        It 'ignores the primary-display values in another case, which Apollo treats as disabled' {
+            $state = New-TestState
+            $state.ApolloConfig['dd_configuration_option'] = 'Ensure_Primary'
+            (Get-Check $state 'display-not-primary').Status | Should -Be 'Pass'
+        }
     }
 
     Context 'isolation of input' {
@@ -106,6 +125,36 @@ Describe 'Get-LichiiGamepadHostCheck' {
             $state = New-TestState
             $state.ApolloConfig['keyboard'] = 'enabled'
             (Get-Check $state 'apollo-keyboard-disabled').Status | Should -Be 'Warn'
+        }
+
+        It 'warns when the key has another case, because Apollo then ignores it' {
+            $state = New-TestState @{ ApolloConfig = ConvertFrom-ApolloConfig -Text "Mouse = disabled`nkeyboard = disabled`n" }
+            (Get-Check $state 'apollo-mouse-disabled').Status | Should -Be 'Warn'
+        }
+
+        It 'reads values like Apollo: off and a value before a comment both mean disabled' {
+            $state = New-TestState @{ ApolloConfig = ConvertFrom-ApolloConfig -Text "mouse = off`nkeyboard = disabled # by hand`n" }
+            (Get-Check $state 'apollo-mouse-disabled').Status | Should -Be 'Pass'
+            (Get-Check $state 'apollo-keyboard-disabled').Status | Should -Be 'Pass'
+        }
+    }
+
+    Context 'agreement with Set-LichiiGamepadApolloConfig' {
+        It 'passes every Apollo check once Set-LichiiGamepadApolloConfig ran, even on a messy sunshine.conf' {
+            $apollo = Join-Path $TestDrive 'Apollo'
+            New-Item -ItemType Directory -Path (Join-Path $apollo 'config') -Force | Out-Null
+            $conf = Join-Path $apollo 'config\sunshine.conf'
+            $messy = "Mouse = disabled`ndd_configuration_option = ensure_primary`n" +
+            "isolated_virtual_display_option = enabled # by hand`nkeyboard = enabled`nkeyboard = disabled`n"
+            [System.IO.File]::WriteAllText($conf, $messy)
+
+            Set-LichiiGamepadApolloConfig -ApolloPath $apollo -Confirm:$false 6>$null
+
+            $state = New-TestState @{ ApolloConfig = ConvertFrom-ApolloConfig -Text ([System.IO.File]::ReadAllText($conf)) }
+            $ids = @('display-not-primary', 'display-isolated', 'apollo-mouse-disabled', 'apollo-keyboard-disabled')
+            $checks = @(Get-LichiiGamepadHostCheck -State $state | Where-Object { $_.Id -in $ids })
+            $checks.Count | Should -Be $ids.Count
+            $checks | Where-Object Status -ne 'Pass' | Should -BeNullOrEmpty
         }
     }
 

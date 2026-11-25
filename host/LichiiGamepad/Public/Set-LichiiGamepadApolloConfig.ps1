@@ -3,8 +3,9 @@
     .SYNOPSIS
         Configures Apollo so the game display, mouse and keyboard stay isolated from the host (ADR 0004).
     .DESCRIPTION
-        Sets dd_configuration_option = ensure_active, isolated_virtual_display_option = enabled,
-        mouse = disabled and keyboard = disabled in sunshine.conf. Writes a timestamped backup first.
+        Writes the sunshine.conf values from ADR 0004: the game display is active but not primary
+        and isolated, and Apollo takes no mouse or keyboard input. Test-LichiiGamepadHost checks the
+        same values. Writes a timestamped backup first.
         Needs administrator rights when Apollo lives under Program Files.
     .PARAMETER ApolloPath
         Apollo installation folder. Defaults to "Apollo" under Program Files.
@@ -21,12 +22,7 @@
         [switch]$RestartService
     )
 
-    $isolation = @{
-        dd_configuration_option         = 'ensure_active'
-        isolated_virtual_display_option = 'enabled'
-        mouse                           = 'disabled'
-        keyboard                        = 'disabled'
-    }
+    $isolation = Get-ApolloIsolationSetting
 
     $confFile = Join-Path $ApolloPath 'config\sunshine.conf'
     if (-not (Test-Path -LiteralPath $confFile)) {
