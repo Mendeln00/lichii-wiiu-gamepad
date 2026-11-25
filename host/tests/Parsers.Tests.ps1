@@ -95,4 +95,10 @@ Describe 'ConvertFrom-ApolloAppList' {
     It 'marks apps without a command as not Lichii' {
         ($Apps | Where-Object Name -eq 'Desktop').IsLichii | Should -BeFalse
     }
+
+    It 'reads the game path after -g, quoted or not' {
+        ($Apps | Where-Object Name -eq 'Beispielspiel').GamePath | Should -Be 'C:\Games\example.xci'
+        ($Apps | Where-Object Name -eq 'Ohne virtuelles Display').GamePath | Should -Be 'C:\Games\other.nsp'
+        ($Apps | Where-Object Name -eq 'Desktop').GamePath | Should -Be ''
+    }
 }

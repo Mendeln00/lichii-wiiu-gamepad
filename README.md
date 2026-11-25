@@ -64,6 +64,12 @@ Apollo auf Isolation einstellen (als Administrator, mit Backup, `-WhatIf` zeigt 
 Set-LichiiGamepadApolloConfig -RestartService
 ```
 
+Für jedes Spiel im Spieleordner ein Spielprofil in Apollo anlegen (als Administrator, mit Backup von `apps.json`, `-WhatIf` geht auch hier). Erkannt werden `.xci`, `.nsp` von Basisspielen und entpackte Spiele (ein Ordner mit `exefs\main`). Updates und DLC als `.nsp` bekommen kein Profil. Als Cover dient eine PNG‑Datei mit gleichem Namen neben dem Spiel, bei entpackten Spielen die erste PNG‑Datei im Ordner. Spiele, die schon ein Profil haben, bleiben unberührt, auch wenn man das Profil umbenannt hat. `lichii.exe` nimmt der Befehl aus einem vorhandenen Profil, sonst gibt man `-LichiiPath` an. Der Neustart von Apollo beendet einen laufenden Stream:
+
+```powershell
+New-LichiiGamepadGameProfile -GamePath 'D:\Spiele' -RestartService
+```
+
 DSU in Lichii einschalten (Lichii vorher beenden, mit Backup, `-WhatIf` geht auch hier). Der Standard passt zu Toffee: DSU‑Server `127.0.0.1:26760`, Touch im Bereich des DS4‑Touchpads. Für eine andere Brücke gibt man `-DsuServer` und `-TouchDevice` an:
 
 ```powershell

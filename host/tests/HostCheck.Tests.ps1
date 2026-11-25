@@ -159,9 +159,11 @@ Describe 'Get-LichiiGamepadHostCheck' {
     }
 
     Context 'game profiles' {
-        It 'warns when no Apollo app starts Lichii' {
+        It 'warns when no Apollo app starts Lichii, pointing to New-LichiiGamepadGameProfile' {
             $state = New-TestState @{ ApolloApps = @() }
-            (Get-Check $state 'game-profile').Status | Should -Be 'Warn'
+            $check = Get-Check $state 'game-profile'
+            $check.Status | Should -Be 'Warn'
+            $check.Fix | Should -Match 'New-LichiiGamepadGameProfile'
         }
 
         It 'warns when a Lichii profile does not use the virtual display' {

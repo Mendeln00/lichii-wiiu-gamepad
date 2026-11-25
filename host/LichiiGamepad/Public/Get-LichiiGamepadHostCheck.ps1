@@ -92,7 +92,7 @@
         $withoutDisplay = @($lichiiApps | Where-Object { -not $_.VirtualDisplay })
         if ($lichiiApps.Count -eq 0) {
             New-HostCheck -Id 'game-profile' -Area Basis -Status Warn -Message 'In Apollo gibt es kein Spielprofil, das Lichii startet.' `
-                -Fix 'In Apollo eine App mit Befehl "<Pfad>\lichii.exe -f -g <Spiel>" und "Always use Virtual Display" anlegen.'
+                -Fix "New-LichiiGamepadGameProfile -GamePath '<Spieleordner>' -LichiiPath '<Pfad>\lichii.exe' -RestartService als Administrator ausführen."
         }
         elseif ($withoutDisplay.Count -gt 0) {
             $names = ($withoutDisplay | ForEach-Object { $_.Name }) -join ', '

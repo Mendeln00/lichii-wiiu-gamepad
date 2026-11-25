@@ -29,6 +29,7 @@
                 ExecutablePath = $executable
                 IsLichii       = ($leaf -match '^lichii.*\.exe$')
                 VirtualDisplay = $virtualDisplay
+                GamePath       = Get-LichiiGameArgument -CommandLine $command
             }
         }
     }
