@@ -3,6 +3,14 @@
 # short status. Claude Code adds stdout to the new session's context.
 # Best effort only: no step may block or fail the session start.
 
+# `git switch` below can replace this very file while bash still reads it.
+# Run from a private copy instead.
+if [ -z "$SESSION_START_COPY" ]; then
+  copy=$(mktemp 2>/dev/null) && cp "$0" "$copy" 2>/dev/null &&
+    SESSION_START_COPY=$copy exec bash "$copy"
+fi
+trap 'rm -f "$SESSION_START_COPY" 2>/dev/null' EXIT
+
 export GIT_TERMINAL_PROMPT=0
 cd "${CLAUDE_PROJECT_DIR:-.}" 2>/dev/null || exit 0
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || exit 0
