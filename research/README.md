@@ -6,3 +6,5 @@ Notizen und Spikes, die (noch) nicht in Code münden. Jede Datei nennt ihre Quel
 - `audio-isolation.md`: Spielton isolieren. Wie Apollo, Toffee und Lichii Geräte wählen und aufnehmen, Wege unter Windows, stilles Gerät und offene Treiber dafür, nötige Upstream-PRs (Issues #15, #43)
 - `tools/`: Messwerkzeuge für Prüfungen am PC
   - `Measure-ProcessLoopback.ps1`: nimmt einen Prozess per Prozess-Loopback auf und misst den Pegel, während er im Lautstärkemixer stumm und leise ist (Issue #15)
+  - `Measure-DeviceLoopback.ps1`: nimmt ein Wiedergabegerät per Geräte-Loopback auf, wie die Brücke, und zeigt das Standardgerät vorher und nachher (Issue #44)
+  - `LoopbackProbe.cs`: Core-Audio-Code, den beide Skripte laden
