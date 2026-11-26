@@ -15,7 +15,7 @@ Geprüfte Stände: Apollo `master` [adc5c5a](https://github.com/ClassicOldSong/A
 - **Lichii wählt sein Ausgabegerät per Anzeigename**: Abschnitt `[Audio]`, Schlüssel `output_device` mit `output_device\default=false` in `qt-config.ini`. Passt der Name zu keinem Gerät, spielt Lichii ohne Meldung auf dem Standardgerät. (belegt, Abschnitt 3)
 - **Windows kann es, ohne das Standardgerät zu ändern.** Loopback geht auf jedem Wiedergabegerät, nicht nur auf dem Standardgerät ([Loopback Recording L11-L14](https://github.com/MicrosoftDocs/win32/blob/bc82a65f74ef2c4f2f44a3d7db5f7cfebfdc3583/desktop-src/CoreAudio/loopback-recording.md?plain=1#L11-L14)). Prozess-Loopback ab Windows 10 Build 20348 nimmt nur einen Prozessbaum auf, egal auf welchem Gerät er spielt ([ApplicationLoopback README L23-L27, L41](https://github.com/microsoft/Windows-classic-samples/blob/434f6002bdf9cf9829406c3ff2b33387982d6168/Samples/ApplicationLoopback/README.md?plain=1#L23-L41)). (belegt)
 - **Stummschalten im Lautstärkemixer gilt auch für den Prozess-Loopback.** Am PC des Maintainers am 2026-11-26 gemessen, mit einem Testton und mit Lichii auf dem Standardgerät: Ist der Prozess stumm, kommt nur noch Rundungsrauschen an (−90 dBFS Spitze), und 10 % Lautstärke senken den Pegel um 20 dB. Prozess-Loopback ersetzt das stille Gerät also nicht. Lichii braucht weiter ein eigenes Gerät, das am PC nicht zu hören ist. (belegt am PC, Abschnitt 4 c)
-- **Eine offene Alternative zu VB-CABLE fehlt noch.** VB-CABLE dürfen wir nicht mitliefern. [Virtual-Audio-Driver](https://github.com/VirtualDrivers/Virtual-Audio-Driver) (MIT) ist ein Kernel-Treiber ohne Signatur von Microsoft und lädt mit Secure Boot nur im Testmodus. Seine Pflege ruht seit Anfang 2026. (belegt, Abschnitt 4 e) Ohne Fremdtreiber ginge eine USB-Soundkarte. (Schluss, ungeprüft)
+- **Eine offene Alternative zu VB-CABLE fehlt noch.** VB-CABLE dürfen wir nicht mitliefern. [Virtual-Audio-Driver](https://github.com/VirtualDrivers/Virtual-Audio-Driver) (MIT) ist ein Kernel-Treiber ohne Signatur von Microsoft und lädt mit Secure Boot nur im Testmodus. Seine Pflege ruht seit Anfang 2026. (belegt, Abschnitt 4 e) Zusätzliche Hardware für den Ton und der HDMI-Ton eines Monitors kommen nicht in Frage (Entscheidung des Maintainers).
 
 Empfehlung (Schluss):
 
@@ -232,7 +232,7 @@ Mit Lichii, am selben PC am 2026-11-26: Ablauf „Messung mit Lichii“, Lichii 
 | normal (zurück) | 500 | 0 | −10,3 | −24,3 |
 
 - Stumm liefert Lichii dasselbe Rundungsrauschen wie der Testton. 10 % Lautstärke liegen 20,2 dB unter normal. „normal“ und „normal (zurück)“ liegen 0,5 dB auseinander, die Stelle im Spiel war also gleichmäßig genug. (belegt am PC)
-- Ein Lauf mit Lichii und `-Polling` fehlt. Das Abfragen ist schon mit dem Testton belegt.
+- Mit `-Polling` (Abfragen alle 10 ms wie Toffee) kamen dieselben Werte: in jeder Phase 500 Pakete, keine stillen Pakete. Stumm lag bei −96,7 dBFS RMS, leise 19,8 dB unter normal, normal bei −24,8 und −24,9 dBFS RMS. (belegt am PC)
 
 ### d. Weitere Wege
 
@@ -242,7 +242,11 @@ Mit Lichii, am selben PC am 2026-11-26: Ablauf „Messung mit Lichii“, Lichii 
 
 ### e. Stilles Gerät bereitstellen
 
-Ein stilles Gerät braucht unter Windows einen Treiber für ein virtuelles Audiogerät. Ohne Treiber bleibt nur ein ungenutztes echtes Wiedergabegerät, etwa der HDMI-Ton eines Monitors ohne Lautsprecher. Das hängt von der Hardware ab. (Schluss) Wir ziehen offene Treiber vor, die wir mitliefern dürfen. (Entscheidung des Maintainers, 2026-11-26)
+Ein stilles Gerät braucht unter Windows einen Treiber für ein virtuelles Audiogerät. (Schluss) Vorgaben des Maintainers vom 2026-11-26:
+
+- Offene Treiber, die wir mitliefern dürfen, haben Vorrang.
+- Keine zusätzliche Hardware für den Ton, etwa eine USB-Soundkarte.
+- Kein ungenutztes echtes Wiedergabegerät wie der HDMI-Ton eines Monitors. Ob ein PC so eins hat, können wir nicht voraussetzen.
 
 **VB-CABLE** (proprietär, Donationware):
 
@@ -259,10 +263,7 @@ Ein stilles Gerät braucht unter Windows einen Treiber für ein virtuelles Audio
 
 **Eigener Treiber:** Ein Treiber für ein Audiogerät läuft im Kernel und bräuchte dieselbe Signatur über Microsoft. Für dieses Projekt ist das nicht realistisch. (Schluss)
 
-**Ohne Fremdtreiber** (noch ungeprüft):
-
-- Eine USB-Soundkarte ohne eingestecktes Gerät nutzt den Klassentreiber, der in Windows steckt. Lichii spielt darauf, die Brücke nimmt per Prozess-Loopback oder Geräte-Loopback auf. Zu prüfen: Bleibt das Gerät aktiv, wenn nichts eingesteckt ist? (Schluss)
-- Ein ungenutzter HDMI- oder DisplayPort-Ton eines Monitors ohne Lautsprecher, siehe oben. (Schluss)
+**Ausgeschlossen**: eine USB-Soundkarte und der HDMI- oder DisplayPort-Ton eines Monitors, siehe Vorgaben oben.
 
 Die Suche nach weiteren offenen Wegen und ihre Bewertung läuft in [Issue #43](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/43).
 
@@ -353,7 +354,7 @@ Festhalten: Die Ausgabe des Skripts (Ziel, Windows, Lesen, Sitzungen, Tabelle, E
 - Was passiert, wenn VB-CABLE während des Spiels verschwindet? cubeb kehrt laut Doku nicht zum Standardgerät zurück. Ob Lichii neu startet oder stumm bleibt, ist offen.
 - Liefert der Loopback von „CABLE Input“ Pakete, solange Lichii nichts spielt? Wenn nicht, bekommt das GamePad Lücken im Ton. Wie es darauf reagiert, ist offen.
 - ~~Geht Prozess-Loopback mit Toffees Abfragen ohne Ereignis-Handle? Wirkt die Stummschaltung im Lautstärkemixer auf den Prozess-Loopback?~~ Beides geklärt (Abschnitt 4 c): Abfragen geht, mit dem Testton gemessen. Die Stummschaltung wirkt mit, mit dem Testton und mit Lichii gemessen.
-- Welcher offene Weg ersetzt VB-CABLE als stilles Gerät? Bleibt eine USB-Soundkarte ohne eingestecktes Gerät aktiv? (Abschnitt 4 e, Issue #43)
+- Welcher offene Treiber ersetzt VB-CABLE als stilles Gerät? (Abschnitt 4 e, Issue #43)
 - Ändert die Windows-Einstellung pro App für `toffee.exe` die Quelle seines Loopbacks? Das wäre ein Weg ohne Code. Toffee spielt aber selbst nichts ab und erscheint deshalb vermutlich nicht im Lautstärkemixer.
 - Überlebt die Windows-Einstellung pro App einen Neustart, und wo steht sie?
 - Nimmt der Apollo-Maintainer einen PR an, und wann? Welchen Namen bekommt der Schalter in Sunshine am Ende: `external_audio` oder `keep_default_sink`?
