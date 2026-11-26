@@ -14,7 +14,7 @@ Geprüfte Stände: Apollo `master` [adc5c5a](https://github.com/ClassicOldSong/A
 - **Toffee nimmt nur das Standardgerät auf** (`eRender`, `eConsole`, Loopback) und bietet keine Geräteauswahl ([audio_capture.cpp L77-L90](https://github.com/Gavwalsh15/toffee_wiiu/blob/85051f02a4537d860052f5e1985efebd688eac13/src/audio/audio_capture.cpp#L77-L90), [framework.md L39](https://github.com/Gavwalsh15/toffee_wiiu/blob/85051f02a4537d860052f5e1985efebd688eac13/docs/framework.md?plain=1#L39)). (belegt) Für die Isolation braucht Toffee eine kleine Änderung. (Schluss)
 - **Lichii wählt sein Ausgabegerät per Anzeigename**: Abschnitt `[Audio]`, Schlüssel `output_device` mit `output_device\default=false` in `qt-config.ini`. Passt der Name zu keinem Gerät, spielt Lichii ohne Meldung auf dem Standardgerät. (belegt, Abschnitt 3)
 - **Windows kann es, ohne das Standardgerät zu ändern.** Loopback geht auf jedem Wiedergabegerät, nicht nur auf dem Standardgerät ([Loopback Recording L11-L14](https://github.com/MicrosoftDocs/win32/blob/bc82a65f74ef2c4f2f44a3d7db5f7cfebfdc3583/desktop-src/CoreAudio/loopback-recording.md?plain=1#L11-L14)). Prozess-Loopback ab Windows 10 Build 20348 nimmt nur einen Prozessbaum auf, egal auf welchem Gerät er spielt ([ApplicationLoopback README L23-L27, L41](https://github.com/microsoft/Windows-classic-samples/blob/434f6002bdf9cf9829406c3ff2b33387982d6168/Samples/ApplicationLoopback/README.md?plain=1#L23-L41)). (belegt)
-- **Stummschalten im Lautstärkemixer gilt auch für den Prozess-Loopback.** Am PC des Maintainers am 2026-11-26 mit einem Testton gemessen: Ist der Prozess stumm, kommt nur noch Rundungsrauschen an (−90 dBFS Spitze), und 10 % Lautstärke senken den Pegel um 20 dB. Prozess-Loopback ersetzt das stille Gerät also nicht. Lichii braucht weiter ein eigenes Gerät, das am PC nicht zu hören ist. (belegt am PC, Abschnitt 4 c) Die Bestätigung mit Lichii selbst steht noch aus.
+- **Stummschalten im Lautstärkemixer gilt auch für den Prozess-Loopback.** Am PC des Maintainers am 2026-11-26 gemessen, mit einem Testton und mit Lichii auf dem Standardgerät: Ist der Prozess stumm, kommt nur noch Rundungsrauschen an (−90 dBFS Spitze), und 10 % Lautstärke senken den Pegel um 20 dB. Prozess-Loopback ersetzt das stille Gerät also nicht. Lichii braucht weiter ein eigenes Gerät, das am PC nicht zu hören ist. (belegt am PC, Abschnitt 4 c)
 - **Offene Alternative zu VB-CABLE:** [Virtual-Audio-Driver](https://github.com/VirtualDrivers/Virtual-Audio-Driver) steht unter MIT-Lizenz und dürfte mitgeliefert werden, ist aber noch Beta. VB-CABLE dürfen wir nicht mitliefern. (belegt, Abschnitt 4 e)
 
 Empfehlung (Schluss):
@@ -220,7 +220,19 @@ Am PC des Maintainers am 2026-11-26, Windows 11 Pro Build 26300, in Windows Powe
 - Windows wendet Stummschaltung und Lautstärke der Sitzung an, **bevor** der Prozess-Loopback den Ton abgreift. Stumm kommen weiter Pakete, aber nur Rundungsrauschen von etwa 1 LSB. Das Flag `AUDCLNT_BUFFERFLAGS_SILENT` setzt Windows dabei nicht. 10 % Lautstärke sind genau 20 dB weniger. (belegt am PC)
 - Lichii im Mixer stumm schalten ist deshalb kein Ersatz für ein stilles Gerät: Die Brücke bekäme dann auch Stille. (Schluss)
 - Abfragen ohne Ereignis-Handle funktioniert mit Prozess-Loopback: 100 Pakete pro Sekunde, wie mit Ereignis. Toffee kann also bei seiner Art zu lesen bleiben. (belegt am PC)
-- Der Testton spielte auf „CABLE Input“, Lichii spielt dagegen auf das Standardgerät. Die Sitzungslautstärke gilt pro Stream und unabhängig vom Gerät. Mit Lichii ist deshalb dasselbe Ergebnis zu erwarten. (Schluss) Bestätigen: „Prüfen am PC“, Schritt 5.
+- Der Testton spielte auf „CABLE Input“, Lichii spielt dagegen auf das Standardgerät. Die Sitzungslautstärke gilt pro Stream und unabhängig vom Gerät. (Schluss) Die Messung mit Lichii bestätigt das.
+
+Mit Lichii, am selben PC am 2026-11-26: Ablauf „Messung mit Lichii“, Lichii auf dem Standardgerät, ein Spiel mit durchgehendem Ton, Windows PowerShell 5.1, Ereignis-Handle, 5 s je Phase. Eine Tonsitzung, vorher und nachher 100 % und nicht stumm. (belegt am PC)
+
+| Phase | Pakete in 5 s | Stille Pakete | Spitze dBFS | RMS dBFS |
+| --- | --- | --- | --- | --- |
+| normal | 500 | 0 | −10,3 | −24,8 |
+| stumm | 499 | 0 | −90,3 | −96,7 |
+| leise (10 %) | 500 | 0 | −30,3 | −44,9 |
+| normal (zurück) | 500 | 0 | −10,3 | −24,3 |
+
+- Stumm liefert Lichii dasselbe Rundungsrauschen wie der Testton. 10 % Lautstärke liegen 20,2 dB unter normal. „normal“ und „normal (zurück)“ liegen 0,5 dB auseinander, die Stelle im Spiel war also gleichmäßig genug. (belegt am PC)
+- Ein Lauf mit Lichii und `-Polling` fehlt. Das Abfragen ist schon mit dem Testton belegt.
 
 ### d. Weitere Wege
 
@@ -333,7 +345,7 @@ Festhalten: Die Ausgabe des Skripts (Ziel, Windows, Lesen, Sitzungen, Tabelle, E
 - Haben Spielprofile eigene Spiel-Konfigurationen mit `output_device\use_global=false`? Dann gilt dort ein anderer Wert.
 - Was passiert, wenn VB-CABLE während des Spiels verschwindet? cubeb kehrt laut Doku nicht zum Standardgerät zurück. Ob Lichii neu startet oder stumm bleibt, ist offen.
 - Liefert der Loopback von „CABLE Input“ Pakete, solange Lichii nichts spielt? Wenn nicht, bekommt das GamePad Lücken im Ton. Wie es darauf reagiert, ist offen.
-- ~~Geht Prozess-Loopback mit Toffees Abfragen ohne Ereignis-Handle? Wirkt die Stummschaltung im Lautstärkemixer auf den Prozess-Loopback?~~ Beides geklärt mit dem Testton (Abschnitt 4 c): Abfragen geht, und die Stummschaltung wirkt mit. Die Bestätigung mit Lichii steht aus („Messung mit Lichii“).
+- ~~Geht Prozess-Loopback mit Toffees Abfragen ohne Ereignis-Handle? Wirkt die Stummschaltung im Lautstärkemixer auf den Prozess-Loopback?~~ Beides geklärt (Abschnitt 4 c): Abfragen geht, mit dem Testton gemessen. Die Stummschaltung wirkt mit, mit dem Testton und mit Lichii gemessen.
 - Lädt die signierte Version von Virtual-Audio-Driver mit Secure Boot ohne Testmodus? Taugt sie als stilles Gerät für Lichii (Abschnitt 4 e)?
 - Ändert die Windows-Einstellung pro App für `toffee.exe` die Quelle seines Loopbacks? Das wäre ein Weg ohne Code. Toffee spielt aber selbst nichts ab und erscheint deshalb vermutlich nicht im Lautstärkemixer.
 - Überlebt die Windows-Einstellung pro App einen Neustart, und wo steht sie?
