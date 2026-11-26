@@ -295,7 +295,14 @@ Bestätigt die Messung mit dem Testton aus Abschnitt 4 c mit Lichii selbst. Daue
 Vorbereiten:
 
 1. In Lichii muss die allgemeine Einstellung „Pause when not in focus“ aus sein. Das ist der Standard ([uisettings.h L111-L116](https://github.com/zortos293/Lichii/blob/2f5443491615e7200a34e642f45ff42dddcd49e7/src/qt_common/config/uisettings.h#L111-L116), [shared_translation.cpp L552-L553](https://github.com/zortos293/Lichii/blob/2f5443491615e7200a34e642f45ff42dddcd49e7/src/qt_common/config/shared_translation.cpp#L552-L553)). Sonst pausiert das Spiel, sobald das PowerShell-Fenster vorne ist.
-2. Lichii spielt auf das Standardgerät: `Test-LichiiGamepadHost -Detailed` meldet bei `audio-isolated` „Standardgerät“ und bei `audio-game-override` Pass. Das ist hier gewollt, denn so würde man es ohne stilles Gerät betreiben.
+2. Lichii spielt auf das Standardgerät. Prüfen im Repo-Ordner:
+
+   ```powershell
+   Import-Module .\host\LichiiGamepad\LichiiGamepad.psd1
+   Test-LichiiGamepadHost -Detailed | Where-Object Area -eq 'Ton'
+   ```
+
+   Erwartet sind zwei Zeilen: Warn „Lichii spielt auf dem Windows-Standardgerät …“ und Pass „Alle Spiele folgen dem globalen Tongerät.“ Die Warnung ist hier gewollt, denn so würde man Lichii ohne stilles Gerät betreiben.
 3. Ein Spiel starten und an eine Stelle gehen, die durchgehend Ton macht, etwa ein Menü mit Musik. Das Spiel nicht pausieren.
 4. Lichii im Lautstärkemixer auf 100 % und nicht stumm stellen. Das Skript gibt den Zustand vorher und nachher aus.
 5. Als Gegenprobe im Browser Musik laufen lassen. Sie darf in der Aufnahme nicht vorkommen.
