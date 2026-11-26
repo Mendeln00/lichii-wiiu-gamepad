@@ -1,6 +1,6 @@
 # Spielton isolieren: Recherche zu Issue #15
 
-Stand: 2026-11-25. Betrifft [Issue #15](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/15), den Ton-Teil von [Issue #31](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/31) und [ADR 0004](../docs/adr/0004-isolation-durch-eigene-kanaele.md).
+Stand: 2026-11-26. Betrifft [Issue #15](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/15), den Ton-Teil von [Issue #31](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/31) und [ADR 0004](../docs/adr/0004-isolation-durch-eigene-kanaele.md).
 
 Kennzeichnung: **(belegt)** heißt, die verlinkte Primärquelle sagt das so. **(Schluss)** heißt, das ist unsere Ableitung aus den Quellen. Sie ist nicht getestet.
 
@@ -14,10 +14,12 @@ Geprüfte Stände: Apollo `master` [adc5c5a](https://github.com/ClassicOldSong/A
 - **Toffee nimmt nur das Standardgerät auf** (`eRender`, `eConsole`, Loopback) und bietet keine Geräteauswahl ([audio_capture.cpp L77-L90](https://github.com/Gavwalsh15/toffee_wiiu/blob/85051f02a4537d860052f5e1985efebd688eac13/src/audio/audio_capture.cpp#L77-L90), [framework.md L39](https://github.com/Gavwalsh15/toffee_wiiu/blob/85051f02a4537d860052f5e1985efebd688eac13/docs/framework.md?plain=1#L39)). (belegt) Für die Isolation braucht Toffee eine kleine Änderung. (Schluss)
 - **Lichii wählt sein Ausgabegerät per Anzeigename**: Abschnitt `[Audio]`, Schlüssel `output_device` mit `output_device\default=false` in `qt-config.ini`. Passt der Name zu keinem Gerät, spielt Lichii ohne Meldung auf dem Standardgerät. (belegt, Abschnitt 3)
 - **Windows kann es, ohne das Standardgerät zu ändern.** Loopback geht auf jedem Wiedergabegerät, nicht nur auf dem Standardgerät ([Loopback Recording L11-L14](https://github.com/MicrosoftDocs/win32/blob/bc82a65f74ef2c4f2f44a3d7db5f7cfebfdc3583/desktop-src/CoreAudio/loopback-recording.md?plain=1#L11-L14)). Prozess-Loopback ab Windows 10 Build 20348 nimmt nur einen Prozessbaum auf, egal auf welchem Gerät er spielt ([ApplicationLoopback README L23-L27, L41](https://github.com/microsoft/Windows-classic-samples/blob/434f6002bdf9cf9829406c3ff2b33387982d6168/Samples/ApplicationLoopback/README.md?plain=1#L23-L41)). (belegt)
+- **Stummschalten im Lautstärkemixer gilt auch für den Prozess-Loopback.** Am PC des Maintainers am 2026-11-26 mit einem Testton gemessen: Ist der Prozess stumm, kommt nur noch Rundungsrauschen an (−90 dBFS Spitze), und 10 % Lautstärke senken den Pegel um 20 dB. Prozess-Loopback ersetzt das stille Gerät also nicht. Lichii braucht weiter ein eigenes Gerät, das am PC nicht zu hören ist. (belegt am PC, Abschnitt 4 c) Die Bestätigung mit Lichii selbst steht noch aus.
+- **Offene Alternative zu VB-CABLE:** [Virtual-Audio-Driver](https://github.com/VirtualDrivers/Virtual-Audio-Driver) steht unter MIT-Lizenz und dürfte mitgeliefert werden, ist aber noch Beta. VB-CABLE dürfen wir nicht mitliefern. (belegt, Abschnitt 4 e)
 
 Empfehlung (Schluss):
 
-1. **Lichii auf ein eigenes Gerät stellen**, etwa VB-CABLE „CABLE Input“. Reine Konfiguration, gilt für beide Wege.
+1. **Lichii auf ein eigenes Gerät stellen**, etwa VB-CABLE „CABLE Input“. Reine Konfiguration, gilt für beide Wege. Offene Treiber haben Vorrang, sobald einer stabil genug ist (Abschnitt 4 e).
 2. **Toffee-Weg**: Feature Request und PR an Toffee für eine Option `--audio-device`. Sie nimmt ein Wiedergabegerät nach ID oder Name per Loopback auf. Später optional Prozess-Loopback für das gestreamte Fenster.
 3. **Apollo-Weg**: PR an Apollo, der Sunshine #5408 und #5647 nachzieht. Bis dahin hat der Apollo-Weg keine Ton-Isolation. Den Namen des Schalters vorher abstimmen, denn der offene [PR #5935](https://github.com/LizardByte/Sunshine/pull/5935) will `external_audio` in `keep_default_sink` umbenennen.
 4. **ADR 0004 korrigieren.** Der Satz „Der Client fordert ‚Ton auf Host behalten‘ an, damit Apollo das Standardgerät nicht umstellt“ ist falsch.
@@ -172,7 +174,7 @@ output_device=CABLE Input (VB-Audio Virtual Cable)
 | a. Eigenes Gerät, Loopback dieses Geräts | Virtuelles Gerät (VB-CABLE), Lichii spielt darauf, die Brücke öffnet „CABLE Input“ gezielt | ja | Treiber nötig. Die Brücke muss ein Gerät wählen können. |
 | a'. Aufnahme von „CABLE Output“ | dasselbe Kabel, normale Aufnahme vom Aufnahmegerät | ja | Für Apollo und Sunshine ungeeignet, die nehmen nur Wiedergabegeräte per Loopback auf |
 | b. Windows-Einstellung pro App | Lichii auf `auto`, in Windows für Lichii ein anderes Ausgabegerät | ja | Keine dokumentierte API, nur von Hand. Speicherort und Haltbarkeit undokumentiert. |
-| c. Prozess-Loopback | Windows 10 Build 20348 oder neuer, Brücke kennt Lichiis Prozess-ID | ja | Spielt Lichii auf dem Standardgerät, hört man das Spiel auch am PC |
+| c. Prozess-Loopback | Windows 10 Build 20348 oder neuer, Brücke kennt Lichiis Prozess-ID | ja | Spielt Lichii auf dem Standardgerät, hört man das Spiel auch am PC. Stummschalten im Mixer schaltet auch die Aufnahme stumm. |
 | d. Sunshine `external_audio` | Sunshine-Vorabversion ab v2026.1122 statt Apollo, `audio_sink` gesetzt | ja | Apollo hat es nicht. Der Name des Schalters kann sich noch ändern. |
 
 Bewertung der Spalten: (Schluss aus den Belegen unten)
@@ -202,11 +204,48 @@ Bewertung der Spalten: (Schluss aus den Belegen unten)
 - „the capture is not tied to a specific audio endpoint“ ([README L25-L27](https://github.com/microsoft/Windows-classic-samples/blob/434f6002bdf9cf9829406c3ff2b33387982d6168/Samples/ApplicationLoopback/README.md?plain=1#L25-L27)). Spielt der Prozess nichts, kommt Stille ([L29-L30](https://github.com/microsoft/Windows-classic-samples/blob/434f6002bdf9cf9829406c3ff2b33387982d6168/Samples/ApplicationLoopback/README.md?plain=1#L29-L30)). (belegt)
 - Prozess-Loopback braucht kein virtuelles Gerät. Soll das Spiel am PC aber nicht zu hören sein, muss Lichii trotzdem auf ein stilles Gerät spielen. Mit beidem zusammen landet auch dann nur Lichii im Stream, wenn eine andere App versehentlich auf „CABLE Input“ spielt. (Schluss)
 
+#### Messung: Stummschalten und Lautstärke im Mixer
+
+Gemessen mit [`tools/Measure-ProcessLoopback.ps1`](tools/Measure-ProcessLoopback.ps1), Aufruf `-SelfTest -ToneDevice 'CABLE Input (VB-Audio Virtual Cable)' -PhaseSeconds 3`. Das Skript startet einen Kindprozess, der einen Sinuston mit 440 Hz und −30 dBFS auf „CABLE Input“ spielt. Diesen Prozess nimmt es per Prozess-Loopback auf (48 kHz, 16 Bit, Stereo, `AUTOCONVERTPCM`). Währenddessen setzt es Stummschaltung und Lautstärke der Tonsitzung des Prozesses über `ISimpleAudioVolume`, die Schnittstelle hinter den Reglern pro App im Lautstärkemixer.
+
+Am PC des Maintainers am 2026-11-26, Windows 11 Pro Build 26300, in Windows PowerShell 5.1 und PowerShell 7, mit Ereignis-Handle und mit Abfragen alle 10 ms. Alle Läufe ergaben dieselben Werte: (belegt am PC)
+
+| Phase | Pakete in 3 s | Stille Pakete | Spitze dBFS | RMS dBFS |
+| --- | --- | --- | --- | --- |
+| normal | 300 | 0 | −30,0 | −33,0 |
+| stumm | 300 | 0 | −90,3 | −96,7 |
+| leise (10 %) | 300 | 0 | −49,9 | −53,0 |
+| normal (zurück) | 300 | 0 | −30,0 | −33,0 |
+
+- Windows wendet Stummschaltung und Lautstärke der Sitzung an, **bevor** der Prozess-Loopback den Ton abgreift. Stumm kommen weiter Pakete, aber nur Rundungsrauschen von etwa 1 LSB. Das Flag `AUDCLNT_BUFFERFLAGS_SILENT` setzt Windows dabei nicht. 10 % Lautstärke sind genau 20 dB weniger. (belegt am PC)
+- Lichii im Mixer stumm schalten ist deshalb kein Ersatz für ein stilles Gerät: Die Brücke bekäme dann auch Stille. (Schluss)
+- Abfragen ohne Ereignis-Handle funktioniert mit Prozess-Loopback: 100 Pakete pro Sekunde, wie mit Ereignis. Toffee kann also bei seiner Art zu lesen bleiben. (belegt am PC)
+- Der Testton spielte auf „CABLE Input“, Lichii spielt dagegen auf das Standardgerät. Die Sitzungslautstärke gilt pro Stream und unabhängig vom Gerät. Mit Lichii ist deshalb dasselbe Ergebnis zu erwarten. (Schluss) Bestätigen: „Prüfen am PC“, Schritt 5.
+
 ### d. Weitere Wege
 
 - **Sunshine `external_audio`**: siehe Abschnitt 1. Mit `audio_sink = <ID von CABLE Input>` und `external_audio = enabled` wäre der Apollo-Weg gelöst, aber ohne Apollo. ADR 0002 legt Apollo fest. Ein Wechsel bräuchte ein neues ADR. Ob Sunshine Apollos virtuelles Display pro App ersetzen kann, haben wir nicht geprüft. (Schluss)
 - **Sunshine PR #6124** (Entwurf) nimmt den Prozessbaum der gestarteten App auf ([PR #6124](https://github.com/LizardByte/Sunshine/pull/6124)). (belegt) Das wäre die sauberste Lösung für den Apollo-Weg, ist aber weit vom Release entfernt. (Schluss)
 - **Notbehelf mit Apollo, nicht empfohlen**: Host-Ton an, `audio_sink` = CABLE Input, `auto_capture_sink = disabled`. Apollo stellt beim Start auf CABLE um und öffnet dort die Aufnahme. Stellt danach jemand das Standardgerät zurück, bleibt die Aufnahme beim alten Gerät ([audio.cpp L232-L244](https://github.com/ClassicOldSong/Apollo/blob/adc5c5a0bd80831ce495434bb16aee2cd4175fb8/src/audio.cpp#L232-L244), [windows/audio.cpp L585-L594](https://github.com/ClassicOldSong/Apollo/blob/adc5c5a0bd80831ce495434bb16aee2cd4175fb8/src/platform/windows/audio.cpp#L585-L594)). `keep_sink_default` greift bei einem nicht virtuellen Gerät nicht ([L771-L780](https://github.com/ClassicOldSong/Apollo/blob/adc5c5a0bd80831ce495434bb16aee2cd4175fb8/src/platform/windows/audio.cpp#L771-L780)). (belegt) Das Standardgerät wechselt aber kurz. Musik und Calls springen dabei auf CABLE und zurück. Das Zurückstellen braucht ein zweites Werkzeug. Das verletzt ADR 0004. (Schluss)
+
+### e. Stilles Gerät bereitstellen
+
+Ein stilles Gerät braucht unter Windows einen Treiber für ein virtuelles Audiogerät. Ohne Treiber bleibt nur ein ungenutztes echtes Wiedergabegerät, etwa der HDMI-Ton eines Monitors ohne Lautsprecher. Das hängt von der Hardware ab. (Schluss) Wir ziehen offene Treiber vor, die wir mitliefern dürfen. (Entscheidung des Maintainers, 2026-11-26)
+
+**VB-CABLE** (proprietär, Donationware):
+
+- Wer VB-CABLE an Firmen oder Einrichtungen verteilt, braucht eine bezahlte Lizenz. Für Bundles und die Einbindung in eigene Software verlangt VB-Audio eine eigene Vereinbarung ([Licensing](https://vb-audio.com/Services/licensing.htm)). (belegt) Ins Repo und in einen eigenen Installer gehört VB-CABLE damit nicht. Der Installer kann höchstens die offizielle Datei von vb-audio.com laden und starten. (Schluss)
+- Stille Installation: Laut zwei Forenbeiträgen kennt `VBCABLE_Setup_x64.exe` die Schalter `-i -h`, laut einem anderen `-i -y`. Dokumentiert sind sie nicht. Den Dialog von Windows für die Treiberinstallation zeigt Windows trotzdem. Der Entwickler von VB-Audio hält es für unmöglich, ihn zu umgehen ([Forum p=7128](https://forum.vb-audio.com/viewtopic.php?p=7128), [Forum p=6681](https://forum.vb-audio.com/viewtopic.php?p=6681)). (belegt, nur Forum) Einmal bestätigen muss man also immer. (Schluss)
+
+**[Virtual-Audio-Driver](https://github.com/VirtualDrivers/Virtual-Audio-Driver)** (offen, Stand [bb34fba](https://github.com/VirtualDrivers/Virtual-Audio-Driver/tree/bb34fba15faf569a6ae9bdea360bc1cf4821354e) vom 2026-03-03):
+
+- MIT-Lizenz. Legt einen virtuellen Lautsprecher und ein virtuelles Mikrofon an. Stammt aus derselben GitHub-Organisation wie der [Virtual Display Driver](https://github.com/VirtualDrivers/Virtual-Display-Driver) (MIT). (belegt) Mitliefern dürften wir ihn. (Schluss)
+- Die Version [25.7.14](https://github.com/VirtualDrivers/Virtual-Audio-Driver/releases/tag/25.7.14) vom 2025-07-14 heißt „Signed“. Signiert ist sie über SignPath.io mit einem Zertifikat der SignPath Foundation. (belegt)
+- Das README nennt die Software Beta und verlangt eine Testsignatur, „A production-signed driver can skip this step“ ([README L2, L58-L63](https://github.com/VirtualDrivers/Virtual-Audio-Driver/blob/bb34fba15faf569a6ae9bdea360bc1cf4821354e/README.md?plain=1#L58-L63)). Installiert wird von Hand über den Gerätemanager. (belegt) Ob die signierte Version mit Secure Boot ohne Testmodus lädt, haben wir nicht geprüft.
+- Offene Issues: Die signierte Version lässt sich nur ab Build 22000 (Windows 11) installieren, obwohl das README Windows 10 nennt ([#23](https://github.com/VirtualDrivers/Virtual-Audio-Driver/issues/23)). Dazu Fehler 39 ([#7](https://github.com/VirtualDrivers/Virtual-Audio-Driver/issues/7)) und eine gescheiterte Installation ([#10](https://github.com/VirtualDrivers/Virtual-Audio-Driver/issues/10)). (belegt)
+- Bewertung: der bevorzugte Kandidat, als Standard aber noch zu unreif. Vor einem Wechsel am PC prüfen: Installation ohne Testmodus, Gerätename in Core Audio, Lichii spielt darauf, Toffee nimmt davon auf. (Schluss)
+
+**Eigener Treiber:** Er müsste von Microsoft signiert sein, wie der Treiber für die Spielanzeige. Für dieses Projekt ist das nicht realistisch. (Schluss)
 
 ## 5. Schluss
 
@@ -244,10 +283,41 @@ Der Ton-Satz sollte lauten: „Lichii spielt auf ein eigenes Gerät. Die Brücke
 2. **Lichii allein**: Lichii beenden, `Set-LichiiGamepadLichiiConfig -AudioDevice '<Name>'` ausführen, Lichii starten. Am PC ist das Spiel nicht zu hören. Musik am PC läuft weiter über die Lautsprecher. In der Systemsteuerung unter Sound (`mmsys.cpl`), Reiter Wiedergabe, schlägt der Pegel bei „CABLE Input“ aus, solange das Spiel Ton macht. Der Lautstärkemixer der Windows-Einstellungen taugt dafür nicht: Er zeigt pro App nur die Windows-Vorgabe, nicht das Gerät, das Lichii selbst wählt. Am PC des Maintainers am 2026-11-25 gemessen: Laut Core Audio (`IAudioSessionManager2`) hatte Lichii seine einzige aktive Sitzung auf „CABLE Input“, der Mixer zeigte bei Lichii aber nicht „CABLE Input“. (belegt am PC)
 3. **Aufnahme statt Brücke**: Mit einer beliebigen Aufnahme-App „CABLE Output“ aufnehmen, während am PC Musik läuft. Die Aufnahme darf nur Lichii enthalten. Das prüft Weg a ganz ohne Brücke.
 4. **Rückfall prüfen**: Einen falschen Namen eintragen. Erwartet: Lichii spielt auf dem Standardgerät, ohne Meldung. Daran testet man die Prüfregel `audio-isolated`. Das gilt nur für ein Spiel ohne eigenes Tongerät: Meldet `audio-game-override` das Spiel, gilt dessen eigener Wert. Am PC des Maintainers blieb ein Spiel deshalb auf „CABLE Input“.
-5. **Prozess-Loopback**: Das Microsoft-Beispiel ApplicationLoopback bauen und mit `ApplicationLoopback <PID von Lichii> includetree test.wav` starten ([README L36-L39](https://github.com/microsoft/Windows-classic-samples/blob/434f6002bdf9cf9829406c3ff2b33387982d6168/Samples/ApplicationLoopback/README.md?plain=1#L36-L39)). Die WAV-Datei darf nur Lichii enthalten, egal auf welchem Gerät Lichii spielt.
+5. **Prozess-Loopback mit Lichii**: Prüft, was eine Brücke per Prozess-Loopback von Lichii bekommt, auch wenn Lichii im Lautstärkemixer stumm ist. Werkzeug: [`tools/Measure-ProcessLoopback.ps1`](tools/Measure-ProcessLoopback.ps1). Es braucht keinen Build und keine Installation. Ablauf und Auswertung stehen in „Messung mit Lichii“ unten.
 6. **Apollo heute**: Mit einem beliebigen Moonlight-Client, etwa moonlight-qt auf einem Laptop, die Zeilen der Tabelle in Abschnitt 1 durchspielen. Vor, während und nach dem Stream das Standardgerät in den Sound-Einstellungen ablesen. Im Apollo-Log steht „Selected audio sink“ ([audio.cpp L185](https://github.com/ClassicOldSong/Apollo/blob/adc5c5a0bd80831ce495434bb16aee2cd4175fb8/src/audio.cpp#L185)). Erwartet: Das Standardgerät wechselt, wie im Code.
 7. **Toffee heute**: Mit Toffee streamen und am PC Musik abspielen. Erwartet: Die Musik ist auf dem GamePad zu hören. Das bestätigt die Lücke für #31.
 8. **Nach den PRs**: Schritt 6 mit `external_audio` und Schritt 7 mit der neuen Option wiederholen. Das Standardgerät darf sich nie ändern.
+
+### Messung mit Lichii
+
+Bestätigt die Messung mit dem Testton aus Abschnitt 4 c mit Lichii selbst. Dauer etwa 25 Sekunden.
+
+Vorbereiten:
+
+1. In Lichii muss die allgemeine Einstellung „Pause when not in focus“ aus sein. Das ist der Standard ([uisettings.h L111-L116](https://github.com/zortos293/Lichii/blob/2f5443491615e7200a34e642f45ff42dddcd49e7/src/qt_common/config/uisettings.h#L111-L116), [shared_translation.cpp L552-L553](https://github.com/zortos293/Lichii/blob/2f5443491615e7200a34e642f45ff42dddcd49e7/src/qt_common/config/shared_translation.cpp#L552-L553)). Sonst pausiert das Spiel, sobald das PowerShell-Fenster vorne ist.
+2. Lichii spielt auf das Standardgerät: `Test-LichiiGamepadHost -Detailed` meldet bei `audio-isolated` „Standardgerät“ und bei `audio-game-override` Pass. Das ist hier gewollt, denn so würde man es ohne stilles Gerät betreiben.
+3. Ein Spiel starten und an eine Stelle gehen, die durchgehend Ton macht, etwa ein Menü mit Musik. Das Spiel nicht pausieren.
+4. Lichii im Lautstärkemixer auf 100 % und nicht stumm stellen. Das Skript gibt den Zustand vorher und nachher aus.
+5. Als Gegenprobe im Browser Musik laufen lassen. Sie darf in der Aufnahme nicht vorkommen.
+
+Messen, in einem normalen PowerShell-Fenster ohne Adminrechte:
+
+```powershell
+cd 'D:\WiiU Gamepad Claude'
+powershell -NoProfile -ExecutionPolicy Bypass -File research\tools\Measure-ProcessLoopback.ps1 -WavPath "$env:TEMP\lichii-loopback.wav"
+```
+
+`-ExecutionPolicy Bypass` gilt nur für diesen Aufruf. Der Pfad ist ein Beispiel. Während der Messung ist das Spiel am PC 5 Sekunden stumm und dann 5 Sekunden leise. Das Skript stellt danach Lautstärke und Stummschaltung zurück. Wurde es hart abgebrochen, etwa durch Schließen des Fensters, Lichii im Mixer von Hand zurückstellen.
+
+Zum Vergleich ein zweiter Lauf mit `-Polling` (Abfragen wie Toffee) und der Selbsttest ohne Lichii: `-SelfTest -ToneDevice 'CABLE Input (VB-Audio Virtual Cable)'`.
+
+Auswerten:
+
+- **Tabelle**: Erwartet sind Pakete in allen vier Phasen, „stumm“ unter −80 dBFS RMS und „leise (10 %)“ etwa 20 dB unter „normal“. Liegen „normal“ und „normal (zurück)“ mehr als 6 dB auseinander, war die Stelle im Spiel zu unruhig. Dann an einer gleichmäßigeren Stelle wiederholen.
+- **Ergebnis-Zeile**: „Stummschalten wirkt auch auf den Prozess-Loopback“ bestätigt die Messung mit dem Testton. „Wirkt NICHT“ widerspräche ihr: Dann bräuchte der Toffee-Weg mit Prozess-Loopback gar kein stilles Gerät. Lichii würde dann stumm geschaltet aufs Standardgerät spielen.
+- **WAV in Audacity**: Erwartet ist das Muster laut, flach, leise, laut, jeweils etwa 5 Sekunden. Die Musik aus dem Browser fehlt.
+
+Festhalten: Die Ausgabe des Skripts (Ziel, Windows, Lesen, Sitzungen, Tabelle, Ergebnis) für beide Läufe als Kommentar an Issue #15. Die WAV-Datei bleibt lokal.
 
 ## Offene Fragen
 
@@ -256,7 +326,8 @@ Der Ton-Satz sollte lauten: „Lichii spielt auf ein eigenes Gerät. Die Brücke
 - Haben Spielprofile eigene Spiel-Konfigurationen mit `output_device\use_global=false`? Dann gilt dort ein anderer Wert.
 - Was passiert, wenn VB-CABLE während des Spiels verschwindet? cubeb kehrt laut Doku nicht zum Standardgerät zurück. Ob Lichii neu startet oder stumm bleibt, ist offen.
 - Liefert der Loopback von „CABLE Input“ Pakete, solange Lichii nichts spielt? Wenn nicht, bekommt das GamePad Lücken im Ton. Wie es darauf reagiert, ist offen.
-- Geht Prozess-Loopback mit Toffees Abfragen ohne Ereignis-Handle? Wirkt Lichiis eigene Lautstärke oder Stummschaltung im Lautstärkemixer auf den Prozess-Loopback?
+- ~~Geht Prozess-Loopback mit Toffees Abfragen ohne Ereignis-Handle? Wirkt die Stummschaltung im Lautstärkemixer auf den Prozess-Loopback?~~ Beides geklärt mit dem Testton (Abschnitt 4 c): Abfragen geht, und die Stummschaltung wirkt mit. Die Bestätigung mit Lichii steht aus („Messung mit Lichii“).
+- Lädt die signierte Version von Virtual-Audio-Driver mit Secure Boot ohne Testmodus? Taugt sie als stilles Gerät für Lichii (Abschnitt 4 e)?
 - Ändert die Windows-Einstellung pro App für `toffee.exe` die Quelle seines Loopbacks? Das wäre ein Weg ohne Code. Toffee spielt aber selbst nichts ab und erscheint deshalb vermutlich nicht im Lautstärkemixer.
 - Überlebt die Windows-Einstellung pro App einen Neustart, und wo steht sie?
 - Nimmt der Apollo-Maintainer einen PR an, und wann? Welchen Namen bekommt der Schalter in Sunshine am Ende: `external_audio` oder `keep_default_sink`?
@@ -286,4 +357,9 @@ Microsoft (Learn-Seiten, Zeilenangaben aus den Quell-Repos [MicrosoftDocs/win32]
 - [Application Loopback API Capture Sample](https://learn.microsoft.com/en-us/samples/microsoft/windows-classic-samples/applicationloopbackaudio-sample/), Code in [Windows-classic-samples](https://github.com/microsoft/Windows-classic-samples/tree/434f6002bdf9cf9829406c3ff2b33387982d6168/Samples/ApplicationLoopback)
 - [Microsoft Support: App-Ton funktioniert nicht](https://support.microsoft.com/en-US/Windows/Hardware/audio/fix-app-audio-not-working-while-system-sounds-work-in-windows)
 
-Sonstige: [VB-Audio VB-CABLE](https://vb-audio.com/Cable/)
+Treiber für virtuelle Audiogeräte:
+
+- [VB-Audio VB-CABLE](https://vb-audio.com/Cable/), [VB-Audio Licensing](https://vb-audio.com/Services/licensing.htm), Forum [p=7128](https://forum.vb-audio.com/viewtopic.php?p=7128) und [p=6681](https://forum.vb-audio.com/viewtopic.php?p=6681)
+- Virtual-Audio-Driver [bb34fba](https://github.com/VirtualDrivers/Virtual-Audio-Driver/tree/bb34fba15faf569a6ae9bdea360bc1cf4821354e), [Release 25.7.14](https://github.com/VirtualDrivers/Virtual-Audio-Driver/releases/tag/25.7.14), Issues [#7](https://github.com/VirtualDrivers/Virtual-Audio-Driver/issues/7), [#10](https://github.com/VirtualDrivers/Virtual-Audio-Driver/issues/10), [#23](https://github.com/VirtualDrivers/Virtual-Audio-Driver/issues/23)
+
+Messung am PC: [`tools/Measure-ProcessLoopback.ps1`](tools/Measure-ProcessLoopback.ps1)
