@@ -74,7 +74,7 @@ Als Cover dient eine PNG‑Datei mit gleichem Namen neben dem Spiel, bei entpack
 New-LichiiGamepadGameProfile -GamePath 'D:\Spiele' -RestartService
 ```
 
-DSU in Lichii einschalten (Lichii vorher beenden, mit Backup, `-WhatIf` geht auch hier). Der Standard passt zu Toffee: DSU‑Server `127.0.0.1:26760`, Touch im Bereich des DS4‑Touchpads. Für eine andere Brücke gibt man `-DsuServer` und `-TouchDevice` an:
+DSU in Lichii einschalten (Lichii vorher beenden, mit Backup, `-WhatIf` geht auch hier). Der Standard passt zu Toffee: DSU‑Server `127.0.0.1:26760`, Touch im Bereich des DS4‑Touchpads. Für eine andere Brücke gibt man `-DsuServer` und `-TouchDevice` an. Touch per DSU kommt in Lichii an, erreicht in Spielen den Touchscreen der Switch aber noch nicht. Das braucht einen Fix in Lichii ([zortos293/Lichii#2675](https://github.com/zortos293/Lichii/issues/2675), [#62](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/62)):
 
 ```powershell
 Set-LichiiGamepadLichiiConfig
