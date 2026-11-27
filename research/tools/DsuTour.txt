@@ -1,0 +1,72 @@
+# Rundgang für Start-DsuTestServer.ps1: jede Eingabe einmal, mit Pause dazwischen. Dauer etwa 70 s.
+# Eine Zeile pro Schritt: Dauer, dann was gehalten wird. Alles andere ist in Ruhe.
+# Hinter dem Schritt steht, was Lichii mit dem Eingabeprofil "WiiU GamePad" daraus macht
+# (Belegung von UDPClient::GetButtonMappingForDevice, Lichii fdc7cdaf).
+
+3s                              # Ruhe, Zeit zum Verbinden (Lichii fragt alle 3 s an)
+
+1s      Circle                  # A
+0.5s
+1s      Cross                   # B
+0.5s
+1s      Triangle                # X
+0.5s
+1s      Square                  # Y
+0.5s
+1s      Up                      # Steuerkreuz oben
+0.5s
+1s      Down                    # Steuerkreuz unten
+0.5s
+1s      Left                    # Steuerkreuz links
+0.5s
+1s      Right                   # Steuerkreuz rechts
+0.5s
+1s      L1                      # L
+0.5s
+1s      R1                      # R
+0.5s
+1s      L2                      # ZL (auch SL)
+0.5s
+1s      R2                      # ZR (auch SR)
+0.5s
+1s      L3                      # linker Stick gedrückt
+0.5s
+1s      R3                      # rechter Stick gedrückt
+0.5s
+1s      Options                 # Plus
+0.5s
+1s      Share                   # Minus
+0.5s
+1s      Home                    # Home
+0.5s
+1s      TouchButton             # Screenshot
+0.5s
+
+1s      LeftStick=right         # linker Stick
+1s      LeftStick=up
+1s      LeftStick=left
+1s      LeftStick=down
+0.5s
+1s      RightStick=right        # rechter Stick
+1s      RightStick=up
+1s      RightStick=left
+1s      RightStick=down
+0.5s
+
+2s      Gyro=90,0,0             # Bewegung: nicken, Lichii teilt durch 312
+2s      Gyro=-90,0,0            # und zurück
+2s      Gyro=0,90,0             # gieren
+2s      Gyro=0,-90,0
+2s      Gyro=0,0,90             # rollen
+2s      Gyro=0,0,-90
+2s      Accel=1,0,0             # Beschleunigung, in Ruhe 0,-1,0
+0.5s
+
+0.3s    Touch=960,470           # Touch tippen, Mitte bei touch_device 0-1919 x 0-941
+0.5s
+0.3s    Touch=300,470           # wischen von links nach rechts, ein Finger
+0.3s    Touch=960,470
+0.3s    Touch=1620,470
+0.5s
+1s      Touch=480,470 Touch2=1440,470   # zwei Finger
+2s
