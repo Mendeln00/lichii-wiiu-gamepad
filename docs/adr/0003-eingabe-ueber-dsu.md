@@ -14,6 +14,6 @@ Der Client bekommt einen eingebauten **DSU‑Server**. Lichii verbindet sich per
 ## Folgen
 
 - Eingaben erreichen **nur** Lichii. Der Host bekommt keine globalen Maus‑ oder Touch‑Ereignisse (Isolation).
-- Gyro wird zur Switch‑Bewegungssteuerung, der GamePad‑Touch zum Switch‑Touchscreen.
+- Gyro wird zur Switch‑Bewegungssteuerung, der GamePad‑Touch zum Switch‑Touchscreen. Für Touch gilt das erst nach einem Fix in Lichii (Stand 2026‑11‑28): Der Touchscreen fragt den DSU‑Client unter einer anderen Kennung ab, als der Client den Touch meldet ([zortos293/Lichii#2675](https://github.com/zortos293/Lichii/issues/2675), [#62](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/62)).
 - Lichii muss einmalig „UDP‑Controller“ aktivieren. Das übernimmt das Host‑Modul.
 - Touch‑Kalibrierung: Der DSU‑Client erwartet Rohwerte im Bereich `min_x..max_x`. Der Client sendet 854×480‑skalierte Werte, und das Host‑Modul setzt `touch_device` passend.
