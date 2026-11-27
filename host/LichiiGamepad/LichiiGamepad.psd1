@@ -9,6 +9,7 @@
         'ConvertFrom-ApolloConfig'
         'ConvertFrom-ApolloAppList'
         'ConvertFrom-LichiiConfig'
+        'ConvertTo-LichiiInputProfile'
         'Get-LichiiGamepadHostCheck'
         'Get-LichiiGamepadHostState'
         'Merge-ApolloAppList'
@@ -16,6 +17,7 @@
         'Merge-LichiiConfig'
         'New-LichiiGamepadGameProfile'
         'Set-LichiiGamepadApolloConfig'
+        'Set-LichiiGamepadInputProfile'
         'Set-LichiiGamepadLichiiConfig'
         'Test-LichiiGamepadHost'
     )

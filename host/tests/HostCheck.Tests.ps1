@@ -22,6 +22,8 @@
                 Controls = @{
                     'enable_udp_controller\default' = 'false'; enable_udp_controller = 'true'
                     'udp_input_servers\default' = 'false'; udp_input_servers = '192.168.0.50:26760'
+                    'player_0_button_a\default' = 'false'
+                    player_0_button_a = 'engine:cemuhookudp,guid:000000000000000000000000c0a80032,port:26760,pad:0,button:8192'
                 }
                 Audio    = @{ 'output_device\default' = 'false'; output_device = 'CABLE Input (VB-Audio Virtual Cable)' }
             }
@@ -269,6 +271,48 @@ Describe 'Get-LichiiGamepadHostCheck' {
             $lichiiChecks = @($checks | Where-Object Id -like 'lichii-dsu*')
             $lichiiChecks.Count | Should -Be 1
             $lichiiChecks[0].Status | Should -Be 'Warn'
+            $checks | Where-Object Id -eq 'lichii-input-profile' | Should -BeNullOrEmpty
+        }
+    }
+
+    Context 'Player 1 in Lichii' {
+        It 'passes when player 1 uses the pad of the configured DSU server' {
+            (Get-Check (New-TestState) 'lichii-input-profile').Status | Should -Be 'Pass'
+        }
+
+        It 'passes for a pad of the second DSU server' {
+            $state = New-TestState
+            $state.LichiiConfig['Controls']['udp_input_servers'] = '127.0.0.1:26760,192.168.0.50:26760'
+            $state.LichiiConfig['Controls']['player_0_button_a'] =
+            'engine:cemuhookudp,guid:000000000000000000000000c0a80032,port:26760,pad:4,button:8192'
+            (Get-Check $state 'lichii-input-profile').Status | Should -Be 'Pass'
+        }
+
+        It 'warns when player 1 still uses the keyboard, pointing to Set-LichiiGamepadInputProfile' {
+            $state = New-TestState
+            $state.LichiiConfig['Controls']['player_0_button_a'] = 'engine:keyboard,code:67,toggle:0'
+            $check = Get-Check $state 'lichii-input-profile'
+            $check.Status | Should -Be 'Warn'
+            $check.Fix | Should -Match 'Set-LichiiGamepadInputProfile'
+        }
+
+        It 'warns when player 1 uses a DSU server that Lichii does not poll' {
+            $state = New-TestState
+            $state.LichiiConfig['Controls']['player_0_button_a'] =
+            'engine:cemuhookudp,guid:0000000000000000000000007f000001,port:26760,pad:0,button:8192'
+            (Get-Check $state 'lichii-input-profile').Status | Should -Be 'Warn'
+        }
+
+        It 'warns when the marker is missing, because Lichii then uses its keyboard default' {
+            $state = New-TestState
+            $state.LichiiConfig['Controls'].Remove('player_0_button_a\default')
+            (Get-Check $state 'lichii-input-profile').Status | Should -Be 'Warn'
+        }
+
+        It 'warns without failing when a DSU server is no IPv4 address' {
+            $state = New-TestState
+            $state.LichiiConfig['Controls']['udp_input_servers'] = 'localhost:26760'
+            (Get-Check $state 'lichii-input-profile').Status | Should -Be 'Warn'
         }
     }
 }

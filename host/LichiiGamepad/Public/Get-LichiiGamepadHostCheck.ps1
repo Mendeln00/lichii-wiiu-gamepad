@@ -131,6 +131,34 @@
                 -Fix 'Set-LichiiGamepadLichiiConfig ausführen (Toffee: 127.0.0.1:26760) oder mit -DsuServer die Adresse der Brücke angeben.'
         }
 
+        # --- Eingabe: Spieler 1 auf dem DSU-Pad --------------------------------
+        # Lichii names the server of a UDP pad by guid and port (ConvertTo-DsuPadIdentifier). Without the
+        # "\default=false" marker it ignores the mapping and uses its keyboard default.
+        $buttonA = @{}
+        foreach ($pair in ((Get-LichiiSetting -Section $controls -Key 'player_0_button_a' -Default '') -split ',')) {
+            $separator = $pair.IndexOf(':')
+            if ($separator -gt 0) { $buttonA[$pair.Substring(0, $separator)] = $pair.Substring($separator + 1) }
+        }
+        $playerServer = $null
+        if ((Get-ConfigValue -Table $buttonA -Key 'engine') -eq 'cemuhookudp') {
+            foreach ($server in $configured) {
+                try { $identifier = ConvertTo-DsuPadIdentifier -DsuServer $server }
+                catch { continue }
+                if ($buttonA['guid'] -eq $identifier.Guid -and $buttonA['port'] -eq [string]$identifier.Port) {
+                    $playerServer = $server
+                    break
+                }
+            }
+        }
+        if ($playerServer) {
+            New-HostCheck -Id 'lichii-input-profile' -Area Eingabe -Status Pass -Message "Spieler 1 nutzt das DSU-Pad der Brücke ($playerServer)."
+        }
+        else {
+            New-HostCheck -Id 'lichii-input-profile' -Area Eingabe -Status Warn `
+                -Message 'Spieler 1 nutzt nicht das DSU-Pad der Brücke. Tasten und Sticks vom GamePad kommen dann nicht im Spiel an.' `
+                -Fix 'Set-LichiiGamepadInputProfile ausführen (Lichii vorher beenden).'
+        }
+
         # --- Ton: Spielton auf einem eigenen Gerät (ADR 0004) -----------------
         $audio = Get-ConfigValue -Table $State.LichiiConfig -Key 'Audio'
         $device = Get-LichiiSetting -Section $audio -Key 'output_device' -Default 'auto'

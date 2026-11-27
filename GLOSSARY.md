@@ -67,3 +67,7 @@ _Avoid_: Headless
 
 **Spielprofil**:
 Ein App‑Eintrag in Apollo, der Lichii mit einem bestimmten Spiel startet.
+
+**Eingabeprofil**:
+Eine gespeicherte Tastenbelegung in Lichii (`config/input/<Name>.ini`). Das Host‑Modul legt `WiiU GamePad` an: das DSU‑Pad der Brücke als Pro Controller für Spieler 1.
+_Avoid_: Spielprofil (das ist Apollo), Controller‑Profil
