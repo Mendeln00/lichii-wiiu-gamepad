@@ -109,3 +109,5 @@ Die Projekte, auf denen wir aufbauen oder von denen wir lernen, stehen in [docs/
 ## Lizenz
 
 [GPL‑3.0‑or‑later](LICENSE), passend zu moonlight‑wiiu, Apollo und Lichii.
+
+Kein offizielles Nintendo‑Produkt, nicht mit Nintendo verbunden; Wii U ist eine Marke von Nintendo.
