@@ -643,7 +643,7 @@ try {
     $server.Start()
 }
 catch [System.Net.Sockets.SocketException] {
-    throw "UDP $Address`:$Port lässt sich nicht öffnen: $($_.Exception.Message) Läuft schon ein DSU-Server, etwa Toffee oder ein zweites Fenster dieses Skripts?"
+    throw "UDP $Address`:$Port lässt sich nicht öffnen: $($_.Exception.Message.TrimEnd('.')). Läuft schon ein DSU-Server, etwa Toffee oder ein zweites Fenster dieses Skripts?"
 }
 
 try {
