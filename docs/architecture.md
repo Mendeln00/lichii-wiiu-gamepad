@@ -10,7 +10,7 @@
 
 | Baustein | Läuft auf | Aufgabe | Basis |
 | --- | --- | --- | --- |
-| Lichii | Host | Emulator. Liest Eingaben per DSU. | upstream, unverändert |
+| Lichii | Host | Emulator. Liest Eingaben per DSU. Fürs GamePad läuft `eden-cli.exe` mit der **GamePad‑Konfiguration** ([ADR 0007](adr/0007-eden-cli-mit-eigener-konfiguration.md)). | upstream, unverändert |
 | Apollo | Host | Erzeugt pro Stream die **Spielanzeige**, kodiert Bild und Ton und spricht das Moonlight‑Protokoll. | upstream, nur konfiguriert |
 | `host/LichiiGamepad` | Host | PowerShell‑Modul: prüft Voraussetzungen, richtet Apollo und Lichii ein, startet die Brücke. | eigen |
 | **Brücke** | je nach Spike: Windows‑App mit ESP32‑C5 am USB oder Linux mit USB‑WLAN‑Dongle | Gibt sich dem GamePad gegenüber als Konsole aus: Kopplung, eigener Access Point, GamePad‑Protokoll für Bild, Ton und Eingabe. Kodiert das Bild eigens für das GamePad und stellt den DSU‑Server bereit. | Fork von [Toffee](https://github.com/Gavwalsh15/toffee_wiiu) oder [Barista](https://github.com/BetaZay/Barista), siehe [ADR 0005](adr/0005-direktmodus-als-ziel.md) |
@@ -50,6 +50,7 @@ sequenceDiagram
 | Bild | Apollo „Virtual Display“ pro Spielprofil, `dd_configuration_option = ensure_active` (**nicht** `ensure_primary`) und „isolated virtual display“ | Der Hauptbildschirm bleibt primär. Die Maus gerät nicht versehentlich auf die Spielanzeige. |
 | Ton | Lichii gibt auf ein eigenes Gerät aus, Apollo nimmt genau dieses Gerät auf | Host‑Ton (Musik, Calls) bleibt am PC. Nur der Spielton geht zum GamePad. |
 | Eingabe | DSU: Lichii fragt die Brücke direkt per UDP ab. Apollo nimmt keine Maus‑ und Tastatureingaben an (`mouse = disabled`, `keyboard = disabled`). | Keine globalen Eingaben auf dem Host. Gyro und Touch kommen nativ an. |
+| Einstellungen | Spielprofile starten `eden-cli.exe` mit der GamePad‑Konfiguration statt `lichii.exe` mit `qt-config.ini` | Spieler 1 und das Tongerät des normalen Lichii bleiben, wie sie sind. Spielstände teilen beide. |
 | Funk | Die Brücke betreibt ihr eigenes WLAN nur für das GamePad, über eigene Funk‑Hardware am USB | Das WLAN und das Netz des PCs bleiben unberührt. |
 
 ## Warum so?

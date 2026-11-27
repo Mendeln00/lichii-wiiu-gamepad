@@ -65,5 +65,9 @@ _Avoid_: UDP‑Controller (nur der Name in Lichiis Oberfläche)
 Lichii bekommt Bild, Ton und Eingabe über eigene Kanäle. Maus, Tastatur, Hauptbildschirm und Ton des Hosts bleiben unberührt.
 _Avoid_: Headless
 
+**GamePad‑Konfiguration**:
+Lichiis Einstellungen nur fürs Spielen am GamePad, getrennt von denen, die Lichii am PC nutzt.
+_Avoid_: sdl2‑config, zweites Profil
+
 **Spielprofil**:
 Ein App‑Eintrag in Apollo, der Lichii mit einem bestimmten Spiel startet.
