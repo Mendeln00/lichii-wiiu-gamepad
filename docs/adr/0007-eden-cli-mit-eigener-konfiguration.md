@@ -38,3 +38,4 @@ eden-cli.exe --config "<GamePad-Konfiguration>" -f -g "<Spiel>"
 - `eden-cli` schreibt die GamePad‑Konfiguration beim Start und beim Beenden. Das Host‑Modul darf sie nur ändern, solange `eden-cli` nicht läuft.
 - Beide teilen das Log `log\eden_log.txt`. Jeder Start schiebt das vorige Log nach `eden_log.txt.old.txt`. Die Spielzeit zählt nur die Qt‑Oberfläche.
 - `ConvertFrom-ApolloAppList` erkennt Lichii heute nur an `^lichii.*\.exe$` und muss künftig auch `eden-cli.exe` erkennen.
+- Für die Windows‑Firewall ist `eden-cli.exe` ein eigenes Programm („Lichii command line“) mit eigenen Regeln. Lehnt man seine erste Anfrage ab, legt Windows eingehende Block‑Regeln dafür an (#60). DSU über `127.0.0.1` stört das nicht. Ob es DSU von einem anderen Gerät stört, etwa einer Brücke unter Linux, ist offen (#59).
