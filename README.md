@@ -80,6 +80,12 @@ DSU in Lichii einschalten (Lichii vorher beenden, mit Backup, `-WhatIf` geht auc
 Set-LichiiGamepadLichiiConfig
 ```
 
+Danach Spieler 1 auf das GamePad legen. Der Befehl legt in Lichii das Eingabeprofil `WiiU GamePad` an und weist es Spieler 1 zu: das DSU‑Pad der Brücke als Pro Controller, belegt wie Lichii einen UDP‑Controller selbst belegt. Die rechte Taste ist A, die untere B. Unter „Steuerung“ muss man dann nichts mehr von Hand belegen. Auch hier Lichii vorher beenden, mit Backup, `-WhatIf` geht. Ein anderes Profil mit gleichem Namen überschreibt der Befehl nur mit `-Force`:
+
+```powershell
+Set-LichiiGamepadInputProfile
+```
+
 Den Spielton auf ein eigenes Gerät legen, etwa [VB‑CABLE](https://vb-audio.com/Cable/). Der Name muss genau so lauten wie in den Windows‑Soundeinstellungen, sonst spielt Lichii ohne Meldung auf dem Standardgerät. Erst einstellen, wenn die Brücke dieses Gerät aufnimmt, sonst ist das Spiel nirgends zu hören. Toffee kann das noch nicht ([research/audio-isolation.md](research/audio-isolation.md)). `-AudioDevice auto` stellt zurück:
 
 ```powershell
