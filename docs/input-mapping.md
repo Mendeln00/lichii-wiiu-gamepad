@@ -21,7 +21,7 @@ flowchart LR
 - Wii U und Switch haben die vier Haupttasten an derselben Stelle: A rechts, B unten, X oben, Y links. Die Belegung folgt der Lage. So belegt Lichii einen UDP‑Controller ohnehin, das Eingabeprofil muss nichts umlegen. (belegt, Tabelle unten)
 - DSU benennt die Haupttasten nach ihrer Lage. Die Spezifikation nutzt dafür Nintendos Namen Y, B, A, X ([DSU L141-L144][dsu-buttons]), Lichii die von PlayStation: Square, Cross, Circle, Triangle ([udp_client.h L69-L91][li-padbutton]). Gemeint sind dieselben Bits. (belegt)
 - **Toffee sendet das zweite Tastenbyte in falscher Reihenfolge.** Acht Tasten kommen in Lichii vertauscht an, siehe [Fehler in Toffee](#fehler-in-toffee). Das Eingabeprofil gleicht das nicht aus. Der Fehler gehört zu Toffee.
-- Ohne Gegenstück sind TV, POWER und SYNC am GamePad und Capture an der Switch. Vorschläge dazu stehen [unten](#tasten-ohne-gegenstück).
+- Ohne Gegenstück sind TV, POWER und SYNC am GamePad und Capture an der Switch. Was HOME und TV auslösen und ein Vorschlag für Capture stehen [unten](#tasten-ohne-gegenstück).
 
 ## Tasten
 
@@ -50,8 +50,8 @@ Spalten:
 | → | Tasten `0x0400` | Right, Byte 16, `32` | →, `button_dright` | richtig | [libdrc][drc-buttons], [DSU][dsu-buttons], [Lichii][li-map], [Toffee][tf-bytes] |
 | ↓ | Tasten `0x0100` | Down, Byte 16, `64` | ↓, `button_ddown` | richtig | [libdrc][drc-buttons], [DSU][dsu-buttons], [Lichii][li-map], [Toffee][tf-bytes] |
 | ← | Tasten `0x0800` | Left, Byte 16, `128` | ←, `button_dleft` | richtig | [libdrc][drc-buttons], [DSU][dsu-buttons], [Lichii][li-map], [Toffee][tf-bytes] |
-| HOME | Tasten `0x0002` | HOME, Byte 18, `1` | HOME, `button_home` | richtig | [libdrc][drc-buttons], [DSU][dsu-buttons], [Lichii][li-map], [Toffee][tf-bytes]; Vorschlag [unten](#home) |
-| TV | Extra `0x20` | – | – | wird nicht gesendet | [libdrc][drc-buttons], [Toffee][tf-bytes]; Vorschlag [unten](#tv) |
+| HOME | Tasten `0x0002` | HOME, Byte 18, `1` | HOME, `button_home` | richtig | [libdrc][drc-buttons], [DSU][dsu-buttons], [Lichii][li-map], [Toffee][tf-bytes]; festgelegt [unten](#home) |
+| TV | Extra `0x20` | – | – | wird nicht gesendet | [libdrc][drc-buttons], [Toffee][tf-bytes]; festgelegt [unten](#tv) |
 | POWER | `power_status` `0x02` | – | – | wird nicht gesendet | [libdrc][drc-buttons]; [unten](#power-und-sync) |
 | SYNC | Tasten `0x0001` | – | – | wird nicht gesendet | [libdrc][drc-buttons], [Toffee][tf-masks]; [unten](#power-und-sync) |
 | – (keine Taste) | – | Touch Button, Byte 19, `1` | Capture, `button_screenshot` | immer 0 | [DSU][dsu-buttons], [Lichii][li-map], [Toffee][tf-bytes]; Vorschlag [unten](#screenshot-capture) |
@@ -72,7 +72,7 @@ Für die Mausbedienung nutzt Toffee beim Touch nur den Rohbereich 100 bis 3995 (
 
 ## Tasten ohne Gegenstück
 
-Das sind Vorschläge. Die Entscheidung trifft der Maintainer im PR. Bauen muss sie die Brücke, nach der Wahl der Plattform ([#33](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/33)). Das Menü der Brücke ist [#19](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/19).
+HOME und TV hat der Maintainer am 2026-11-28 festgelegt ([PR #64](https://github.com/Mendeln00/lichii-wiiu-gamepad/pull/64)). Für Screenshot steht hier ein Vorschlag. Bauen muss das die Brücke, nach der Wahl der Plattform ([#33](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/33)). Das Menü der Brücke ist [#19](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/19).
 
 ### HOME
 
@@ -83,7 +83,7 @@ Was feststeht:
 - In der Qt‑Oberfläche (`lichii.exe`) ist HOME auch Teil von Tastenkürzeln: HOME+− beendet Lichii, HOME+Plus hält an, HOME+B schaltet den Vollbildmodus, HOME+X den Docked‑Modus ([uisettings.cpp L34-L62][li-hotkeys]). (belegt) Im Code von `eden-cli` (`src/lichii_cmd`) gibt es keine Tastenkürzel. Fürs GamePad läuft `eden-cli` ([ADR 0007](adr/0007-eden-cli-mit-eigener-konfiguration.md)). (Schluss)
 - HOME darf Windows nicht als Guide‑Taste erreichen, sonst öffnet sich womöglich die Xbox Game Bar ([#53](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/53)). Über DSU geschieht das nicht. Toffee legt HOME nur beim virtuellen Xbox‑360‑Controller auf Guide ([virtual_controller.cpp L49][tf-xbox]). Diese Option bleibt im Direktmodus aus. (belegt)
 
-**Vorschlag:**
+**Festgelegt:**
 
 - **Standard: HOME → Switch‑HOME** über DSU‑Byte 18. Nur so lösen Spiele und Lichii HOME aus. Die Brücke reicht HOME unverändert durch und wertet einen langen Druck nicht selbst aus, denn Lichii nutzt den langen Druck schon.
 - **Einstellbar in der Brücke: „HOME und TV tauschen“.** Dann öffnet HOME das Menü der Brücke und TV sendet Switch‑HOME. So bleiben beide Funktionen erreichbar, und es braucht keine Tastenkombination.
@@ -95,7 +95,7 @@ Was feststeht:
 - Das GamePad meldet TV im Byte `extra_buttons` ([libdrc L99-L103][drc-buttons]). Toffee liest die Taste ([gamepad_buttons.h L9][tf-masks]), sendet sie aber weder per DSU noch an den virtuellen Xbox‑Controller ([dsu_server.cpp L226-L231][tf-bytes], [virtual_controller.cpp L37-L50][tf-xbox]). (belegt)
 - DSU hat keine freie Taste: Die 16 Bits, HOME und der Touch Button sind vergeben ([DSU L141-L144][dsu-buttons]). (belegt)
 
-**Vorschlag: TV → Menü der Brücke.** Die Switch hat keine TV‑Taste, und so bleibt jede Spieltaste frei. Solange das Menü offen ist, sendet die Brücke einen Ruhezustand an Lichii: keine Taste gedrückt, Sticks in der Mitte. Sonst steuert das Bedienen des Menüs nebenbei das Spiel. (Schluss)
+**Festgelegt: TV → Menü der Brücke.** Die Switch hat keine TV‑Taste, und so bleibt jede Spieltaste frei. Solange das Menü offen ist, sendet die Brücke einen Ruhezustand an Lichii: keine Taste gedrückt, Sticks in der Mitte. Sonst steuert das Bedienen des Menüs nebenbei das Spiel. (Schluss)
 
 ### Screenshot (Capture)
 
@@ -140,7 +140,7 @@ Richtig wäre ZL = `1`, ZR = `2`, L = `4`, R = `8`, X = `16`, A = `32`, B = `64`
 
 Sichtbar ist der Fehler auch ohne GamePad: `toffee-cli dsu --simulate` drückt der Reihe nach A, B, X, Y ([main.cpp L402-L413][tf-simulate]). Nach dem Code kommen sie in Lichii als ZR, L, ZL, R an. (Schluss, nicht ausgeführt)
 
-Wir gleichen den Fehler **nicht** im Eingabeprofil aus. Nach einem Fix in Toffee wäre das Profil sonst falsch. Der Entwurf für ein Issue bei Toffee steht in [#20](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/20).
+Wir gleichen den Fehler **nicht** im Eingabeprofil aus. Nach einem Fix in Toffee wäre das Profil sonst falsch. Gemeldet ist der Fehler als [Gavwalsh15/toffee_wiiu#2](https://github.com/Gavwalsh15/toffee_wiiu/issues/2).
 
 ## Wo die Belegung umgesetzt ist
 
@@ -148,9 +148,9 @@ Wir gleichen den Fehler **nicht** im Eingabeprofil aus. Nach einem Fix in Toffee
 | --- | --- | --- |
 | `ConvertTo-LichiiInputProfile` im Host‑Modul | Eingabeprofil nach der Spalte „Switch“, einzelne Tasten per `-ButtonMap` | umgesetzt ([#52](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/52)) |
 | `research/tools/Start-DsuTestServer.ps1` | sendet DSU‑Tasten direkt mit ihrem Namen, ohne GamePad | umgesetzt ([#60](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/60)) |
-| Brücke, Toffee‑Weg | sendet nach der Spalte „DSU“, sobald Toffee den Fehler behebt | offen, Entwurf in [#20](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/20) |
+| Brücke, Toffee‑Weg | sendet nach der Spalte „DSU“, sobald Toffee den Fehler behebt | offen, gemeldet als [Gavwalsh15/toffee_wiiu#2](https://github.com/Gavwalsh15/toffee_wiiu/issues/2) |
 | Brücke, Linux‑Weg | Barista hat keinen DSU‑Server. Unserer folgt dieser Tabelle | offen ([#32](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/32)) |
-| HOME, TV, Screenshot | wie oben vorgeschlagen | offen ([#19](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/19), nach [#33](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/33)) |
+| HOME, TV, Screenshot | HOME und TV wie festgelegt, Screenshot wie vorgeschlagen | offen ([#19](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/19), nach [#33](https://github.com/Mendeln00/lichii-wiiu-gamepad/issues/33)) |
 
 [dsu]: https://github.com/v1993/cemuhook-protocol/blob/82bf8a837cc7d2254e9257729f462a233d9ad184/README.md
 [dsu-buttons]: https://github.com/v1993/cemuhook-protocol/blob/82bf8a837cc7d2254e9257729f462a233d9ad184/README.md?plain=1#L130-L144
