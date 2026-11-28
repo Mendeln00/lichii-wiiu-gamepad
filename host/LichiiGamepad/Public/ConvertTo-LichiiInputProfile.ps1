@@ -9,6 +9,7 @@
         Without -ButtonMap every button follows Lichii's own mapping for a UDP controller
         (UDPClient::GetButtonMappingForDevice): the face buttons by position, so the right one (Circle) is A.
         Sticks and motion follow GetAnalogMappingForDevice and GetMotionMappingForDevice.
+        docs/input-mapping.md lists the whole mapping from GamePad to DSU to Switch, with sources.
     .PARAMETER DsuServer
         DSU server of the bridge as "IPv4:port", as in Lichii's udp_input_servers.
     .PARAMETER Pad
