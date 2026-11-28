@@ -4,6 +4,7 @@ Notizen und Spikes, die (noch) nicht in Code münden. Jede Datei nennt ihre Quel
 
 - `direct-mode.md`: Direktmodus ohne Konsole. Kopplung, Protokoll, Projekte und Lizenzen, Hardware, Plattform (Meilensteine M2 bis M4)
 - `audio-isolation.md`: Spielton isolieren. Wie Apollo, Toffee und Lichii Geräte wählen und aufnehmen, Wege unter Windows, stilles Gerät und offene Treiber dafür, nötige Upstream-PRs (Issues #15, #43)
+- `lichii-local-build.md`: Lichii unter Windows lokal bauen, um einen Fix vor dem Upstream-PR zu testen. Werkzeuge wie in Lichiis CI, portabler Start ohne die echten Daten (Issue #62)
 - `tools/`: Messwerkzeuge für Prüfungen am PC
   - `Measure-ProcessLoopback.ps1`: nimmt einen Prozess per Prozess-Loopback auf und misst den Pegel, während er im Lautstärkemixer stumm und leise ist (Issue #15)
   - `Measure-DeviceLoopback.ps1`: nimmt ein Wiedergabegerät per Geräte-Loopback auf, wie die Brücke, und zeigt das Standardgerät vorher und nachher (Issue #44)
