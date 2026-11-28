@@ -102,7 +102,7 @@ Ein Spiel, dessen Eigenschaften man in Lichii öffnet und mit OK schließt, beh�
 | `bridge/` | Die Brücke: Einrichtung, Konfiguration und Verweise auf unsere Forks |
 | `wiiu/` | Plan B: Wii‑U‑Client als Fork von moonlight‑wiiu |
 | `research/` | Recherchen und Spikes, z. B. zum GamePad‑Protokoll und zu Dongles |
-| `docs/` | Architektur, ADRs, Roadmap, Agent‑Konventionen |
+| `docs/` | Architektur, Tastenbelegung, ADRs, Roadmap, Agent‑Konventionen |
 
 ## Mitmachen
 

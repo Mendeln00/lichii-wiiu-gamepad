@@ -43,6 +43,8 @@ sequenceDiagram
   end
 ```
 
+Welche Taste des GamePads als welche Switch‑Taste ankommt, steht in [input-mapping.md](input-mapping.md).
+
 ## Isolation: Wie bleibt der Host frei?
 
 | Kanal | Maßnahme | Ergebnis |

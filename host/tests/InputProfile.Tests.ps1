@@ -23,6 +23,22 @@ Describe 'ConvertTo-LichiiInputProfile' {
         $result[$Key] | Should -BeExactly "$LocalPad,button:$Button"
     }
 
+    It 'matches the button table in docs/input-mapping.md' {
+        # Lichii's PadButton value of a DSU button from its byte and bit value in the DSU packet.
+        $byteBase = @{ 16 = 0x1; 17 = 0x100; 18 = 0x40000; 19 = 0x80000 }
+        $inputProfile = ConvertTo-LichiiInputProfile -DsuServer '127.0.0.1:26760'
+        $doc = Join-Path $PSScriptRoot '..\..\docs\input-mapping.md'
+        $rows = 0
+        foreach ($line in Get-Content -LiteralPath $doc -Encoding UTF8) {
+            if ($line -match 'Byte (\d+), `(\d+)` \| [^|]*`(button_\w+)`') {
+                $button = $byteBase[[int]$Matches[1]] * [int]$Matches[2]
+                $inputProfile[$Matches[3]] | Should -BeExactly "$LocalPad,button:$button" -Because "the doc maps $($Matches[3]) so"
+                $rows++
+            }
+        }
+        $rows | Should -Be 18 -Because 'the doc lists 16 buttons, HOME and Capture'
+    }
+
     It 'maps both sticks and both motion inputs to the DSU pad' {
         $result = ConvertTo-LichiiInputProfile -DsuServer '127.0.0.1:26760'
         $result['lstick'] | Should -BeExactly "$LocalPad,axis_x:0,axis_y:1"
